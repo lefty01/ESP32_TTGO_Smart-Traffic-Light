@@ -16,7 +16,7 @@ arduino sample sketch for ESP32 (here: LILYGO TTGO-T w. color oled) to control t
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
-  63|_|_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|_| 7
      _ _ _ _ _ _ _ _
     |_|_|_|_|_|_|_|_|64
     |_|_|_|_|_|_|_|_|
@@ -25,7 +25,7 @@ arduino sample sketch for ESP32 (here: LILYGO TTGO-T w. color oled) to control t
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
- 127|_|_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|_|71
      _ _ _ _ _ _ _ _
     |_|_|_|_|_|_|_|_|128
     |_|_|_|_|_|_|_|_|
@@ -34,7 +34,7 @@ arduino sample sketch for ESP32 (here: LILYGO TTGO-T w. color oled) to control t
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
     |_|_|_|_|_|_|_|_|
- 191|_|_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|_|135
 
 
 # Features / Ideas
