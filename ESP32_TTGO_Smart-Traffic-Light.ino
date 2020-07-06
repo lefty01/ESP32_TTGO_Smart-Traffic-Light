@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.4.0"
+#define VERSION "0.4.4"
 #define MQTTDEVICEID "ESP_AMPEL"
 
 #include <Arduino.h>
@@ -141,6 +141,7 @@ const char* mqttSetMode  = "/" MQTTDEVICEID "/setmode";
 const char* mqttState    = "/" MQTTDEVICEID "/state";
 const char* mqttTLM      = "/" MQTTDEVICEID "/tlm"; // traffic light mode
 const char* mqttOpmode   = "/" MQTTDEVICEID "/opmode"; // current mode of operation
+const char* mqttBrightness = "/" MQTTDEVICEID "/brightness";
 const char* mqttButton   = "/" MQTTDEVICEID "/button";
 
 // ICACHE_RAM_ATTR void enc_button_B_cb()
@@ -187,103 +188,20 @@ void handleTrafficLight()
 }
 
 
-void buttonInit()
-{
-  //  encBtnA.setDebounceTime(0);
-  //  encBtnB.setDebounceTime(0);
-
-  btn1.setPressedHandler([](Button2 & b) {
-    DEBUG_PRINTLN("Button 1 SHORT click...");
-    b1();
-  });
-
-  btn2.setPressedHandler([](Button2 & b) {
-    DEBUG_PRINTLN("Button 2 SHORT click...");
-    b2();
-  });
-
-  btn3.setPressedHandler([](Button2 & b) {
-    DEBUG_PRINTLN("Button 3 SHORT click...");
-    b3();
-  });
-
-  // btn4.setPressedHandler([](Button2 & b) {
-  //   DEBUG_PRINTLN("Button 4 SHORT click...start sequence");
-  //   startSequence();
-  // });
-
-  
-  encBtnP.setTapHandler([](Button2 & b) {
-    unsigned int time = b.wasPressedFor();
-    DEBUG_PRINTLN(time);
-    if (time > 3000) { // > 3sec enters config menu
-      //DEBUG_PRINTLN("very long click ... toggle config menu");
-      if (MODE == CONFIG) {
-	DEBUG_PRINTLN("exit config menu");
-	MODE = PREV_MODE;
-	allLedsOff();
-      }
-      else {
-	DEBUG_PRINTLN("enter config menu");
-	PREV_MODE = MODE;
-	MODE = static_cast<opModes>(CONFIG);
-	drawConfigMenu();
-	drawVersion();
-	return;
-      }
-    }
-    else if (time > 600) {
-      DEBUG_PRINTLN("Button PUSH long click...");
-      MODE = static_cast<opModes>(static_cast<int>(MODE) + 1);
-      MODE = static_cast<opModes>(static_cast<int>(MODE) % static_cast<int>(_NUM_MODES_));
-
-      TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
-    }
-    else {
-      DEBUG_PRINTLN("Button PUSH short click...");
-      toggleRed    = true;
-      toggleYellow = true;
-      toggleGreen  = true;
-    }
-
-    tft.fillScreen(TFT_BLACK);
-
-    isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(MODE), true);
-
-    drawTrafficLight(0);
-    drawModeText(MODE);
-
-    allLedsOff();
-
-    DEBUG_PRINT("TRAFFIC_LIGHT_MODE: ");
-    DEBUG_PRINTLN(TRAFFIC_LIGHT_MODE);
-
-  });
-}
-
-
-void buttonLoop()
-{
-    btn1.loop();
-    btn2.loop();
-    btn3.loop();
-    btn4.loop();
-    encBtnP.loop();
-}
-
 
 void setup()
 {
   DEBUG_BEGIN(115200);
 
-  pinMode(ENC_BUTTON_A, INPUT_PULLUP); // does not work right, need ext. pull-up
+  pinMode(ENC_BUTTON_A, INPUT_PULLUP); // does not work right, need ext. pull-up (here 10k)
   pinMode(ENC_BUTTON_B, INPUT_PULLUP);
   //pinMode(ENC_BUTTON_PUSH, INPUT_PULLUP);
   //attachInterrupt(digitalPinToInterrupt(ENC_BUTTON_A), enc_button_A_cb, FALLING);
   //attachInterrupt(digitalPinToInterrupt(ENC_BUTTON_B), enc_button_B_cb, FALLING);
  
   tft.begin();
-  tft.setRotation(1);
+  tft.setRotation(3);
+
   tft.fillScreen(TFT_BLACK);
 
   isWifiAvailable = setupWifi() ? false : true;
@@ -452,6 +370,13 @@ void loop()
 
       DEBUG_PRINT("set brightness: ");
       DEBUG_PRINTLN(ledBrightness);
+
+      if (isMqttAvailable) {
+	char b[4];
+	sprintf(b, "%d", ledBrightness);
+	isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+      }
+
       FastLED.setBrightness(ledBrightness);
       FastLED.show();
     } else if (result == DIR_CCW) {
@@ -460,6 +385,13 @@ void loop()
 
       DEBUG_PRINT("set brightness: ");
       DEBUG_PRINTLN(ledBrightness);
+
+      if (isMqttAvailable) {
+	char b[4];
+	sprintf(b, "%d", ledBrightness);
+	isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+      }
+
       FastLED.setBrightness(ledBrightness);
       FastLED.show();
     }
