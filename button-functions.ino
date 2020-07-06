@@ -1,3 +1,87 @@
+void buttonInit()
+{
+  //  encBtnA.setDebounceTime(0);
+  //  encBtnB.setDebounceTime(0);
+
+  btn1.setPressedHandler([](Button2 & b) {
+    DEBUG_PRINTLN("Button 1 SHORT click...");
+    b1();
+  });
+
+  btn2.setPressedHandler([](Button2 & b) {
+    DEBUG_PRINTLN("Button 2 SHORT click...");
+    b2();
+  });
+
+  btn3.setPressedHandler([](Button2 & b) {
+    DEBUG_PRINTLN("Button 3 SHORT click...");
+    b3();
+  });
+
+  // btn4.setPressedHandler([](Button2 & b) {
+  //   DEBUG_PRINTLN("Button 4 SHORT click...start sequence");
+  //   startSequence();
+  // });
+
+  
+  encBtnP.setTapHandler([](Button2 & b) {
+    unsigned int time = b.wasPressedFor();
+    DEBUG_PRINTLN(time);
+    if (time > 3000) { // > 3sec enters config menu
+      //DEBUG_PRINTLN("very long click ... toggle config menu");
+      if (MODE == CONFIG) {
+	DEBUG_PRINTLN("exit config menu");
+	MODE = PREV_MODE;
+	allLedsOff();
+      }
+      else {
+	DEBUG_PRINTLN("enter config menu");
+	PREV_MODE = MODE;
+	MODE = static_cast<opModes>(CONFIG);
+	drawConfigMenu();
+	drawVersion();
+	return;
+      }
+    }
+    else if (time > 600) {
+      DEBUG_PRINTLN("Button PUSH long click...");
+      MODE = static_cast<opModes>(static_cast<int>(MODE) + 1);
+      MODE = static_cast<opModes>(static_cast<int>(MODE) % static_cast<int>(_NUM_MODES_));
+
+      TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
+      allLedsOff();
+    }
+    else {
+      DEBUG_PRINTLN("Button PUSH short click...");
+      toggleRed    = true;
+      toggleYellow = true;
+      toggleGreen  = true;
+    }
+
+    tft.fillScreen(TFT_BLACK);
+
+    isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(MODE), true);
+
+    drawTrafficLight(0);
+    drawModeText(MODE);
+
+    //allLedsOff();
+
+    DEBUG_PRINT("TRAFFIC_LIGHT_MODE: ");
+    DEBUG_PRINTLN(TRAFFIC_LIGHT_MODE);
+
+  });
+}
+
+
+void buttonLoop()
+{
+    btn1.loop();
+    btn2.loop();
+    btn3.loop();
+    btn4.loop();
+    encBtnP.loop();
+}
 
 
 // FIXME: function names

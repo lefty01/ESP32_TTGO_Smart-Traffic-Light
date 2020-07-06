@@ -7,6 +7,8 @@ arduino sample sketch for ESP32 (here: LILYGO TTGO-T w. color oled) to control t
 * 3 x 8*8 RGB-Led Matrix (WS2812B https://www.aliexpress.com/item/32825073247.html?spm=a2g0s.9042311.0.0.27424c4dYEJDNZ)
 * 3 Input Buttons (push-button) internal pull-ups working
 * 1 rotary encoder switch (w/push-button) with external pull-ups (10k) ... could not get proper signal with internal pull-up (at least not on gpio37, gpio17)
+* Note on Power Supply, we have 192 RGB-Leds which can draw a specified max. current of 60mA per pixel! So driving all LEDs white at full brightness would lead to 192 * 0.06A = 11.5A (!). As you can see in one of the images I'm using a 5A rated power supply, but the sample code does not use white color and limits brightness ... but this could lead to trouble in case of sw or hw bugs!
+
 
 
 ## LED Martix Arrangement
@@ -53,4 +55,16 @@ OTA is now working and makes use of the LEDs to indicate update progress.
 * checkout https://jorgen-vikinggod.github.io/LEDMatrix/
 * checkout https://xantorohara.github.io/led-matrix-editor/
 * misc refactoring ...
+
+
+
+# Pictures
+
+![breadboard](breadboard.jpg)
+![powersupply](powersupply.jpg)
+![inside](inside.jpg)
+![almostcomplete](almost-complete.jpg)
+![complete](complete.jpg)
+
+
 
