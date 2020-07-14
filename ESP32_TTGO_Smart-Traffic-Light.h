@@ -10,17 +10,18 @@
 // "cycle through" modes FIXME:  make proper state-machine implementation...
 enum opModes: byte
 {
-  TRAFFIC_AUTO      // cycle through trafficLightModes at fixed intervalls
+  TRAFFIC_AUTO = 0  // cycle through trafficLightModes at fixed intervalls
     ,TRAFFIC_MANUAL // cycle through trafficLightModes at manual button press
     ,TRAFFIC        // manual toggle red/yellow/green on/off via buttons 1-3
     ,MOOD           // toggle simileys via buttons 1-2
     ,STARTAMPEL     // f1-like start signel, button1: start, button2: stop -> show time
-    ,PATTERN
-    ,PARTY
+    ,DISCO
+    ,APP_CONFIG
     ,_NUM_MODES_
 };
 // special modes
-const byte CONFIG = 0x10;
+const byte MODE_SELECT = 0x10;
+//const byte APP_CONFIG  = 0x20;
 
 
 
@@ -31,8 +32,8 @@ const char* mode2str(opModes mode)
   if (mode == TRAFFIC_MANUAL) return "AMPEL (Manual)";
   if (mode == MOOD)           return "LAUNE";
   if (mode == STARTAMPEL)     return "START AMPEL";
-  if (mode == PATTERN)        return "MUSTER";
-  if (mode == PARTY)          return "PARTY";
+  if (mode == DISCO)          return "DISCO";
+  if (mode == APP_CONFIG)     return "CONFIG Menu";
   return "INVALID";
 }
 
@@ -63,6 +64,9 @@ enum moodType: byte
 
 // tft-display-control prototypes
 void drawTrafficLight(int mode, bool clear=true);
+void drawModeSelectMenu();
+void drawConfigMenu(bool update=false);
+
 // led-matrix-control prototypes
 void fillTopRed(bool on=true);
 void fillMiddleYellow(bool on=true);

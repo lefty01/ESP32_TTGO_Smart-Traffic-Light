@@ -28,11 +28,15 @@ const char* state2str(int state) {
 #define DEBUG_PRINT_MQTTSTATE(x)
 #endif
 
-#define DEBUG_BEGIN(x)    Serial.begin(x)
-#define DEBUG_PRINT(x)    Serial.print(x)
-#define DEBUG_PRINTLN(x)  Serial.println(x)
-#define DEBUG_PRINTDEC(x) Serial.print(x, DEC)
-#define DEBUG_PRINTHEX(x) Serial.print(x, HEX)
+const char* mqttDbg = "/" MQTTDEVICEID "/debug";
+
+#define DEBUG_BEGIN(x)        Serial.begin(x)
+#define DEBUG_PRINT(x)        Serial.print(x)
+#define DEBUG_PRINTLN(x)      Serial.println(x)
+#define DEBUG_PRINTDEC(x)     Serial.print(x, DEC)
+#define DEBUG_PRINTHEX(x)     Serial.print(x, HEX)
+#define DEBUG_PRINTF(x_, ...) Serial.printf((x_), ##__VA_ARGS__)
+#define DEBUG_PRINTMQTT(x)    mqttClient.publish(mqttDbg, x);
 
 #else
 
@@ -42,6 +46,8 @@ const char* state2str(int state) {
 #define DEBUG_PRINTDEC(x)
 #define DEBUG_PRINTHEX(x)
 #define DEBUG_PRINT_MQTTSTATE(x)
+#define DEBUG_PRINTF(x_, ...)
+#define DEBUG_PRINTMQTT(x)
 #endif
 
 #endif

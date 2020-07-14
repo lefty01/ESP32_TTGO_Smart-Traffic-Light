@@ -23,7 +23,7 @@ void drawTime(unsigned long time)
 void drawVersion()
 {
   tft.setTextColor(TFT_WHITE);
-  tft.setTextFont(4);
+  tft.setTextFont(2);
   tft.setCursor(120, 110);
   tft.print("Version: "); tft.println(VERSION);
 }
@@ -37,9 +37,10 @@ void drawModeText(opModes mode)
   tft.fillRect(60, 18, TFT_WHITE-60, TFT_HEIGHT-50, TFT_BLACK);
 
   tft.setCursor(60, 18);
+  tft.setTextFont(4);
   tft.print("MODUS  "); tft.println(mode);
   tft.setCursor(60, 40);
-
+  tft.setTextFont(2);
   tft.println(mode2str(mode));
 
   // if (mode == TRAFFIC_AUTO)   tft.println("AMPEL (Auto)");
@@ -47,32 +48,70 @@ void drawModeText(opModes mode)
   // if (mode == MOOD)           tft.println("LAUNE");
   // if (mode == PATTERN)        tft.println("MUSTER");
   // if (mode == PARTY)          tft.println("PARTY");
+  drawVersion();
 }
+
 // define config_t or config class to provide as arg (config_t* config)
-void drawConfigMenu()
+void drawConfigMenu(bool update)
 {
-  fillSolid(leds, 0, NUM_LEDS, CRGB::Yellow);
-  FastLED.show();
+  tft.setTextDatum(TC_DATUM);
 
-  tft.fillScreen(TFT_BLACK);
+  if (! update) {
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.drawString("APP CONFIG", tft.width() / 2, 0, 4);
+  }
+  // -> draw "progress bar" as brightness indicator...
+  tft.setCursor(0, 40, 2); // posx, posy, font size=4
 
-  tft.setCursor(10, 10, 4); // posx, posy, font size=4
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  //tft.setTextColor(TFT_GREEN);
-  //tft.setTextFont(4);
-  //tft.setCursor(10, 10);
-  tft.println("SMART AMPEL CONFIG");
-  tft.setTextFont(2);
-  tft.println("");
-  tft.println("adjust brightness"); // -> draw "progress bar" as brightness indicator...
+  if (update) {
+    tft.setTextColor(TFT_BLACK, TFT_BLACK);
+    tft.print("Adjust brightness: ");
+    tft.println("000");
+    tft.setCursor(0, 40, 2); // posx, posy, font size=4
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  }
+  tft.print("Adjust brightness: ");
+  tft.println(ledBrightness);
+  if (update)
+    return;
+
   tft.println("config option 2 ...");
   tft.println("config option 3 ...");
+
+}
+
+void drawModeSelectMenu()
+{
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextDatum(TC_DATUM);
+  tft.drawString("Select Mode", tft.width() / 2, 0 /*tft.height() / 2 */, 4);
+
+  tft.setTextDatum(MC_DATUM);
+
+  tft.drawString(mode2str(selectMode), tft.width() / 2, tft.height() / 2, 4); // middle line, green
+
+  // draw prev/next menu item in white and smaller font above and below the current selection
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+  // prev mode check if first mode and wrap mode accordingly
+  tft.drawString((selectMode == TRAFFIC_AUTO) ?
+		 mode2str(static_cast<opModes>(static_cast<int>(_NUM_MODES_) - 1)) :
+		 mode2str(static_cast<opModes>(static_cast<int>(selectMode) - 1)),
+		 tft.width() / 2, tft.height() / 2 - 22, 2);
+
+  // next mode, modulo number of modes
+  tft.drawString(mode2str(static_cast<opModes>((static_cast<int>(selectMode) + 1) %
+					       static_cast<int>(_NUM_MODES_))),
+		 tft.width() / 2, tft.height() / 2 + 22, 2);
+
+  drawVersion();
 }
 
 // tft drawing ...
 /*
   0,0            240,0
-
   128,0          240,128
 
   modes:

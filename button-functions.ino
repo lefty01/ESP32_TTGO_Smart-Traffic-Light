@@ -18,41 +18,69 @@ void buttonInit()
     b3();
   });
 
-  // btn4.setPressedHandler([](Button2 & b) {
-  //   DEBUG_PRINTLN("Button 4 SHORT click...start sequence");
-  //   startSequence();
-  // });
 
   
+  // encoder push-button handler
   encBtnP.setTapHandler([](Button2 & b) {
     unsigned int time = b.wasPressedFor();
     DEBUG_PRINTLN(time);
     if (time > 3000) { // > 3sec enters config menu
-      //DEBUG_PRINTLN("very long click ... toggle config menu");
-      if (MODE == CONFIG) {
-	DEBUG_PRINTLN("exit config menu");
-	MODE = PREV_MODE;
+      DEBUG_PRINTLN("very long click ... do nothing");
+    }
+    else if (time > 600) {
+      DEBUG_PRINTLN("Encoder Button PUSH long click...");
+      // longer click while in select menu exit and restore prev mode
+      if (opMode == MODE_SELECT) {
+	DEBUG_PRINTLN("exit mode select menu");
+	DEBUG_PRINTMQTT("exit mode select menu");
+	opMode = prevMode;
+      }
+      else if (opMode == APP_CONFIG) {
+	DEBUG_PRINTLN("exit config (sub) mode");
+	DEBUG_PRINTMQTT("exit config sub menu");
+	// ... or shall we exit menu directly?
+	opMode = static_cast<opModes>(MODE_SELECT);
 	allLedsOff();
+	drawModeSelectMenu();
+	return;
       }
       else {
-	DEBUG_PRINTLN("enter config menu");
-	PREV_MODE = MODE;
-	MODE = static_cast<opModes>(CONFIG);
-	drawConfigMenu();
-	drawVersion();
+	DEBUG_PRINTLN("enter mode select menu");
+	DEBUG_PRINTMQTT("enter mode select menu");
+	prevMode = opMode;
+	opMode = static_cast<opModes>(MODE_SELECT);
+	selectMode = prevMode;
+	drawModeSelectMenu();
 	return;
       }
     }
-    else if (time > 600) {
-      DEBUG_PRINTLN("Button PUSH long click...");
-      MODE = static_cast<opModes>(static_cast<int>(MODE) + 1);
-      MODE = static_cast<opModes>(static_cast<int>(MODE) % static_cast<int>(_NUM_MODES_));
-
-      TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
-      allLedsOff();
-    }
     else {
       DEBUG_PRINTLN("Button PUSH short click...");
+      // if we are in select menu then need short button click to enter/select that mode
+      if (opMode == MODE_SELECT) {
+	if (selectMode == APP_CONFIG) {
+	  prevMode = opMode;
+	  opMode   = APP_CONFIG;
+	  DEBUG_PRINTLN("enter app config menu");
+	  DEBUG_PRINTMQTT("enter app config menu");
+	  drawConfigMenu();
+	  return;
+	}
+
+	opMode = selectMode;
+	DEBUG_PRINTF("select menu: choosing mode %s\n", mode2str(opMode));
+	DEBUG_PRINTMQTT("select menue, choosing a new opmode");
+
+      }
+      if (opMode == APP_CONFIG) {
+	// in config mode (brightness) and short click...
+	DEBUG_PRINTLN("in app config menu... short click -> exit");
+	DEBUG_PRINTMQTT("in app config menu... short click");
+	opMode = static_cast<opModes>(MODE_SELECT);
+	drawModeSelectMenu();
+	allLedsOff();
+	return;
+      }
       toggleRed    = true;
       toggleYellow = true;
       toggleGreen  = true;
@@ -60,10 +88,10 @@ void buttonInit()
 
     tft.fillScreen(TFT_BLACK);
 
-    isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(MODE), true);
+    isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(opMode), true);
 
     drawTrafficLight(0);
-    drawModeText(MODE);
+    drawModeText(opMode);
 
     //allLedsOff();
 
@@ -79,7 +107,7 @@ void buttonLoop()
     btn1.loop();
     btn2.loop();
     btn3.loop();
-    btn4.loop();
+
     encBtnP.loop();
 }
 
@@ -89,7 +117,7 @@ void buttonLoop()
 // FIXME: call drawTrafficLight from here instead of within fill functions?!
 void b1()
 {
-  switch (MODE) {
+  switch (opMode) {
   case TRAFFIC:  {
     fillTopRed(toggleRed);
     break;
@@ -107,8 +135,8 @@ void b1()
     startSequence();
     break;
   case TRAFFIC_AUTO:
-  case PATTERN:
-  case PARTY:
+  case DISCO:
+  case APP_CONFIG:
   default:
     break;
   }
@@ -118,7 +146,7 @@ void b1()
 
 void b2()
 {
-  switch (MODE) {
+  switch (opMode) {
   case TRAFFIC:
     fillMiddleYellow(toggleYellow);
     break;
@@ -143,7 +171,7 @@ void b2()
 
 void b3()
 {
-  switch (MODE) {
+  switch (opMode) {
   case TRAFFIC: {
     fillBottomGreen(toggleGreen);
     break;
