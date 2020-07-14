@@ -136,16 +136,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     DEBUG_PRINTLN("setting operating mode via mqtt");
     // handle set command ...
     if (0 == memcmp("traffic_auto", payload, 12)) {
-      MODE = TRAFFIC_AUTO;
+      opMode = TRAFFIC_AUTO;
     } else if (0 == memcmp("traffic_manual", payload, 14)) {
-      MODE = TRAFFIC_MANUAL;
+      opMode = TRAFFIC_MANUAL;
     } else if (0 == memcmp("traffic", payload, 7)) { // check after other "traffic" commands since they would match as well
-      MODE = TRAFFIC;
+      opMode = TRAFFIC;
     } else if (0 == memcmp("mood", payload, 4)) {
-      MODE = MOOD;
+      opMode = MOOD;
     }
-    drawModeText(MODE);
-    if (isMqttAvailable) mqttClient.publish(mqttOpmode, mode2str(MODE), true);
+    drawModeText(opMode);
+    if (isMqttAvailable) mqttClient.publish(mqttOpmode, mode2str(opMode), true);
   }
 
 

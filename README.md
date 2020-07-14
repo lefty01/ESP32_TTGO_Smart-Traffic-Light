@@ -49,6 +49,15 @@ Since the kids needed some traffic light as well it features some automatic mode
 Other ideas are some kind of mood light or "disco" mode, to light up LEDs at random pattern. Or trigger patterns via mqtt command.
 Clock/Watch mode, add some DS1307 RTC Module.
 OTA is now working and makes use of the LEDs to indicate update progress.
+## OTA
+Issue: OTA failed: no response from device
+Fix:   firewall rules
+       $ sudo iptables -I INPUT  -s 192.168.1.123 -j ACCEPT
+       $ sudo iptables -I OUTPUT -d 192.168.1.123 -j ACCEPT
+
+
+# Menu Control
+
 
 
 # FIXMEs/TODOs/Improvements

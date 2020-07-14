@@ -20,8 +20,9 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.4.4"
+#define VERSION "0.6.0"
 #define MQTTDEVICEID "ESP_AMPEL"
+#define OTA_HOSTNAME "smart_ampel1"
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -45,9 +46,9 @@ FASTLED_USING_NAMESPACE
 #include <Rotary.h>
 //#include <DateTime.h>
 
-#include "NotoSansBold15.h"
+//#include "NotoSansBold15.h"
 // The font names are arrays references, thus must NOT be in quotes ""
-#define AA_FONT_SMALL NotoSansBold15
+//#define AA_FONT_SMALL NotoSansBold15
 
 #include "ESP32_TTGO_Smart-Traffic-Light.h"
 #include "icons.h"
@@ -63,7 +64,6 @@ FASTLED_USING_NAMESPACE
 #define BUTTON_1        33
 #define BUTTON_2        25
 #define BUTTON_3        26
-#define BUTTON_4        27
 
 #define ENC_BUTTON_PUSH 15
 #define ENC_BUTTON_A    37
@@ -118,15 +118,16 @@ TFT_eSPI tft = TFT_eSPI();
 Button2 btn1(BUTTON_1);
 Button2 btn2(BUTTON_2);
 Button2 btn3(BUTTON_3);
-Button2 btn4(BUTTON_4);
 
 Button2 encBtnP(ENC_BUTTON_PUSH);
 Rotary rotary = Rotary(ENC_BUTTON_A, ENC_BUTTON_B);
 
 
-static volatile opModes MODE = TRAFFIC_AUTO;
-static volatile opModes PREV_MODE;
+static volatile opModes opMode = TRAFFIC_AUTO;
+static volatile opModes prevMode;
+static volatile opModes selectMode; // "temp" mode that will be assigned in select menu
 static volatile unsigned int TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
+
 static unsigned long stopwatch;
 
 static volatile short ledBrightness = BRIGHTNESS;
@@ -137,12 +138,12 @@ bool inConfigMode = false;
 bool isWifiAvailable = false;
 bool isMqttAvailable = false;
 
-const char* mqttSetMode  = "/" MQTTDEVICEID "/setmode";
-const char* mqttState    = "/" MQTTDEVICEID "/state";
-const char* mqttTLM      = "/" MQTTDEVICEID "/tlm"; // traffic light mode
-const char* mqttOpmode   = "/" MQTTDEVICEID "/opmode"; // current mode of operation
+const char* mqttSetMode    = "/" MQTTDEVICEID "/setmode";
+const char* mqttState      = "/" MQTTDEVICEID "/state";
+const char* mqttTLM        = "/" MQTTDEVICEID "/tlm"; // traffic light mode
+const char* mqttOpmode     = "/" MQTTDEVICEID "/opmode"; // current mode of operation
 const char* mqttBrightness = "/" MQTTDEVICEID "/brightness";
-const char* mqttButton   = "/" MQTTDEVICEID "/button";
+const char* mqttButton     = "/" MQTTDEVICEID "/button";
 
 // ICACHE_RAM_ATTR void enc_button_B_cb()
 // {
@@ -166,7 +167,7 @@ void handleTrafficLight()
   default:
     allLedsOff();
     drawTrafficLight(0);
-    drawModeText(MODE);
+    drawModeText(opMode);
     break;
   case STOP: // 0
     fillTopRed();
@@ -223,7 +224,7 @@ void setup()
   }
 
   if (isWifiAvailable) {
-    ArduinoOTA.setHostname("smart_ampel1");
+    ArduinoOTA.setHostname(OTA_HOSTNAME);
     ArduinoOTA.onStart([]() {
 			 String type;
 			 if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -327,7 +328,7 @@ void setup()
   // // --- end server req. handler
 
   tft.setCursor(0, 0);            // Set cursor at top left of screen
-  tft.loadFont(AA_FONT_SMALL);    // Must load the font first
+  //tft.loadFont(AA_FONT_SMALL);    // Must load the font first
   tft.setTextColor(TFT_CYAN, TFT_BLACK);
   tft.setTextWrap(true); // Wrap on width
   drawVersion();
@@ -342,9 +343,9 @@ void setup()
   tft.println("ESP TTGO Smart-Ampel");
 
   drawTrafficLight(0);
-  drawModeText(MODE);
+  drawModeText(opMode);
 
-  isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(MODE), true);
+  isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(opMode), true);
   
   buttonInit();
 }
@@ -361,45 +362,69 @@ void loop()
   }
 
 
-  if (CONFIG == MODE) { // = static_cast<opModes>(CONFIG);
+  if (MODE_SELECT == opMode) {
+    if (result == DIR_CW) {
+      selectMode = static_cast<opModes>(static_cast<int>(selectMode) + 1);
+      selectMode = static_cast<opModes>(static_cast<int>(selectMode) %
+					static_cast<int>(_NUM_MODES_));
+      DEBUG_PRINT("selectMode: ");
+      DEBUG_PRINTLN(selectMode);
+      drawModeSelectMenu();
+    } else if (result == DIR_CCW) {
+      if (selectMode == TRAFFIC_AUTO)
+	selectMode = static_cast<opModes>(static_cast<int>(_NUM_MODES_) - 1);
+      else
+	selectMode = static_cast<opModes>(static_cast<int>(selectMode) - 1);
+
+      DEBUG_PRINT("SELECT MODE: ");
+      DEBUG_PRINTLN(selectMode);
+      drawModeSelectMenu();
+    }
+  }
+
+  if (APP_CONFIG == opMode) {
+    TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
     // all leds to yellow to adjust brightness ...
-    
+    fillSolid(leds, 0, NUM_LEDS, CRGB::Yellow);
+    FastLED.show();
+
     if (result == DIR_CW) {
       if (ledBrightness < MAX_BRIGHTNESS)
 	ledBrightness++;
 
       DEBUG_PRINT("set brightness: ");
       DEBUG_PRINTLN(ledBrightness);
-
       if (isMqttAvailable) {
-	char b[4];
-	sprintf(b, "%d", ledBrightness);
-	isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+        char b[4];
+        sprintf(b, "%d", ledBrightness);
+        isMqttAvailable = mqttClient.publish(mqttBrightness, b);
       }
+
+      drawConfigMenu(true);
 
       FastLED.setBrightness(ledBrightness);
       FastLED.show();
     } else if (result == DIR_CCW) {
       if (ledBrightness > MIN_BRIGHTNESS)
-	ledBrightness--;
+        ledBrightness--;
 
       DEBUG_PRINT("set brightness: ");
       DEBUG_PRINTLN(ledBrightness);
-
       if (isMqttAvailable) {
-	char b[4];
-	sprintf(b, "%d", ledBrightness);
-	isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+        char b[4];
+        sprintf(b, "%d", ledBrightness);
+        isMqttAvailable = mqttClient.publish(mqttBrightness, b);
       }
+
+      drawConfigMenu(true);
 
       FastLED.setBrightness(ledBrightness);
       FastLED.show();
     }
-    
-  }
+  } // APP_CONFIG mode
 
   // cycle through "regular" traffic light sequence
-  if (TRAFFIC_AUTO == MODE) {
+  if (TRAFFIC_AUTO == opMode) {
     if (TRAFFIC_LIGHT_MODE == GET_READY) {
       if (millis() > (sw_timer_2s + EVERY_SECOND * 2)) {
 	sw_timer_2s = millis();
@@ -408,8 +433,7 @@ void loop()
 	handleTrafficLight();
       }
     }
-    else
-    if (TRAFFIC_LIGHT_MODE == ATTN) {
+    else if (TRAFFIC_LIGHT_MODE == ATTN) {
       if (millis() > (sw_timer_4s + EVERY_SECOND * 4)) {
 	sw_timer_4s = millis();
 	TRAFFIC_LIGHT_MODE += 1;
