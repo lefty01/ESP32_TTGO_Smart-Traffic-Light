@@ -141,6 +141,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
       opMode = TRAFFIC_MANUAL;
     } else if (0 == memcmp("traffic", payload, 7)) { // check after other "traffic" commands since they would match as well
       opMode = TRAFFIC;
+    } else if (0 == memcmp("disco", payload, 5)) {
+      opMode = DISCO;
     } else if (0 == memcmp("mood", payload, 4)) {
       opMode = MOOD;
     }

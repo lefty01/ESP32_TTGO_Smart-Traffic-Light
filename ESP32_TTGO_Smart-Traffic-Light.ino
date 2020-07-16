@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.6.0"
+#define VERSION "0.6.6"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -88,10 +88,13 @@ FASTLED_USING_NAMESPACE
 unsigned long sw_timer_10s;
 unsigned long sw_timer_2s;
 unsigned long sw_timer_4s;
-
+unsigned long sw_timer_10ms;
 
 // This is an array of leds.  One item for each led in your strip.
 CRGB leds[NUM_LEDS];
+// fastled palette/blend
+CRGBPalette16 currentPalette;
+TBlendType    currentBlending;
 
 
 /* code above (and hw wiring) assumes three 8x8 rgb matrix panels connected in series
@@ -188,6 +191,14 @@ void handleTrafficLight()
   }
 }
 
+void FillLEDsFromPaletteColors(uint8_t colorIndex)
+{
+  for (int i = 0; i < NUM_LEDS; ++i) {
+    leds[i] = ColorFromPalette(currentPalette, colorIndex,
+			       ledBrightness, currentBlending);
+    colorIndex += 3;
+  }
+}
 
 
 void setup()
@@ -336,6 +347,8 @@ void setup()
   FastLED.addLeds<CHIPSET, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).
     setCorrection(TypicalSMD5050);
   FastLED.setBrightness(BRIGHTNESS);
+  currentPalette = PartyColors_p; //RainbowColors_p;
+  currentBlending = LINEARBLEND;
   
   ledTest();
 
@@ -354,6 +367,7 @@ void loop()
 {
   buttonLoop(); // fixme: in this sample we have long delay on led_test and led start
   unsigned char result = rotary.process();
+
   if (isWifiAvailable) ArduinoOTA.handle();
 
   if (isWifiAvailable && (false == (isMqttAvailable = mqttClient.loop()))) {
@@ -361,6 +375,14 @@ void loop()
     isMqttAvailable = mqttConnect(false) ? false : true;
   }
 
+  if (DISCO == opMode) {
+    if ((millis() - sw_timer_10ms) > 200) {
+      static uint8_t startIndex = 0;
+      startIndex = startIndex + 1; /* motion speed */
+      FillLEDsFromPaletteColors(startIndex);
+      FastLED.show();
+     }
+  }
 
   if (MODE_SELECT == opMode) {
     if (result == DIR_CW) {
@@ -426,7 +448,7 @@ void loop()
   // cycle through "regular" traffic light sequence
   if (TRAFFIC_AUTO == opMode) {
     if (TRAFFIC_LIGHT_MODE == GET_READY) {
-      if (millis() > (sw_timer_2s + EVERY_SECOND * 2)) {
+      if ((millis() - sw_timer_2s) > EVERY_SECOND * 2) {
 	sw_timer_2s = millis();
 	TRAFFIC_LIGHT_MODE += 1;
 	TRAFFIC_LIGHT_MODE %= _NUM_TRAFFIC_LIGHT_MODES_;
@@ -434,15 +456,14 @@ void loop()
       }
     }
     else if (TRAFFIC_LIGHT_MODE == ATTN) {
-      if (millis() > (sw_timer_4s + EVERY_SECOND * 4)) {
+      if ((millis() - sw_timer_4s) > EVERY_SECOND * 4) {
 	sw_timer_4s = millis();
 	TRAFFIC_LIGHT_MODE += 1;
 	TRAFFIC_LIGHT_MODE %= _NUM_TRAFFIC_LIGHT_MODES_;
 	handleTrafficLight();
       }
     }
-    else
-    if (millis() > (sw_timer_10s + EVERY_10_SECONDS)) {
+    else if ((millis() - sw_timer_10s) > EVERY_10_SECONDS * 2) { // every 20 seconds
       sw_timer_10s = millis();
       sw_timer_2s = millis();
       sw_timer_4s = millis();
@@ -451,5 +472,4 @@ void loop()
       handleTrafficLight();
     }
   }
-
 }
