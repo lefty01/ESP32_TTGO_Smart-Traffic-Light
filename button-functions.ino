@@ -69,8 +69,7 @@ void buttonInit()
 
 	opMode = selectMode;
 	DEBUG_PRINTF("select menu: choosing mode %s\n", mode2str(opMode));
-	DEBUG_PRINTMQTT("select menue, choosing a new opmode");
-
+	DEBUG_PRINTMQTT("select menu, choosing a new opmode");
       }
       if (opMode == APP_CONFIG) {
 	// in config mode (brightness) and short click...
@@ -80,6 +79,11 @@ void buttonInit()
 	drawModeSelectMenu();
 	allLedsOff();
 	return;
+      }
+      if (opMode == DISCO) {
+	// we exit disco mode ... clear leds
+	DEBUG_PRINTLN("exit disco mode");
+	allLedsOff();
       }
       toggleRed    = true;
       toggleYellow = true;
@@ -155,13 +159,6 @@ void b2()
     drawSmiley(toggleYellow ? NEUTRAL : NO_MOOD, MATRIX_POS_MIDDLE);
     break;
 
-  case STARTAMPEL: { // stop
-    unsigned long time = millis() - stopwatch;
-    drawTime(time);
-    DEBUG_PRINT("time: ");
-    DEBUG_PRINTLN(time);
-    break;
-  }
   default:
     break;
   }
@@ -178,6 +175,13 @@ void b3()
   }
   case MOOD: {
     drawSmiley(toggleGreen ? SAD : NO_MOOD, MATRIX_POS_BOTTOM);
+    break;
+  }
+  case STARTAMPEL: { // stop
+    unsigned long time = millis() - stopwatch;
+    drawTime(time);
+    DEBUG_PRINT("time: ");
+    DEBUG_PRINTLN(time);
     break;
   }
   default:

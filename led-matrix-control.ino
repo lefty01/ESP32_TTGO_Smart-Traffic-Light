@@ -64,6 +64,7 @@ void allLedsOff()
 {
   fillSolid(leds, 0, NUM_LEDS, CRGB::Black);
   FastLED.show();
+  //FastLED.clear();
 }
 
 
