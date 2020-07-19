@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.6.6"
+#define VERSION "0.6.7"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -376,7 +376,7 @@ void loop()
   }
 
   if (DISCO == opMode) {
-    if ((millis() - sw_timer_10ms) > 200) {
+    if ((millis() - sw_timer_10ms) > 500) {
       static uint8_t startIndex = 0;
       startIndex = startIndex + 1; /* motion speed */
       FillLEDsFromPaletteColors(startIndex);
@@ -410,7 +410,16 @@ void loop()
     fillSolid(leds, 0, NUM_LEDS, CRGB::Yellow);
     FastLED.show();
 
+    // TODO select items from app config menu ...
     if (result == DIR_CW) {
+
+      // if APP_CONFIG_DISCO_MODE
+      // select fast led palette eg. rainbow or somehting ...
+
+      // if APP_CONFIG_DISCO_SPEED
+      // control "speed" (delay) when filling colors from palette ...
+
+      // if APP_CONFIG_BRIGHTNESS ... current default while the only option
       if (ledBrightness < MAX_BRIGHTNESS)
 	ledBrightness++;
 
