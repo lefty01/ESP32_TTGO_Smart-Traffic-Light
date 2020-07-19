@@ -50,6 +50,7 @@ void buttonInit()
 	prevMode = opMode;
 	opMode = static_cast<opModes>(MODE_SELECT);
 	selectMode = prevMode;
+	allLedsOff();
 	drawModeSelectMenu();
 	return;
       }
