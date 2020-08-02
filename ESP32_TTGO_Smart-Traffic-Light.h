@@ -16,6 +16,7 @@ enum opModes: byte
     ,MOOD           // toggle simileys via buttons 1-2
     ,STARTAMPEL     // f1-like start signel, button1: start, button2: stop -> show time
     ,DISCO
+    ,CLOCK
     ,APP_CONFIG
     ,_NUM_MODES_
 };
@@ -24,7 +25,7 @@ const byte MODE_SELECT = 0x10;
 //const byte APP_CONFIG  = 0x20;
 
 
-
+// german menu ;)
 const char* mode2str(opModes mode)
 {
   if (mode == TRAFFIC)        return "AMPEL Farben";
@@ -33,6 +34,7 @@ const char* mode2str(opModes mode)
   if (mode == MOOD)           return "LAUNE";
   if (mode == STARTAMPEL)     return "START AMPEL";
   if (mode == DISCO)          return "DISCO";
+  if (mode == CLOCK)          return "UHR";
   if (mode == APP_CONFIG)     return "CONFIG Menu";
   return "INVALID";
 }

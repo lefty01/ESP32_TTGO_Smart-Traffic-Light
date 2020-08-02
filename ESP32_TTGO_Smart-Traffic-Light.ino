@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.6.7"
+#define VERSION "0.7.0"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -87,6 +87,7 @@ FASTLED_USING_NAMESPACE
 #define EVERY_MINUTE EVERY_SECOND * 60
 unsigned long sw_timer_10s;
 unsigned long sw_timer_2s;
+unsigned long sw_timer_1m;
 unsigned long sw_timer_4s;
 unsigned long sw_timer_10ms;
 
@@ -113,7 +114,13 @@ TBlendType    currentBlending;
 
 
 WiFiClientSecure net;
+WiFiUDP ntpUDP;
 PubSubClient mqttClient(net);
+NTPClient timeClient(ntpUDP, 7200);
+// You can specify the time server pool and the offset (in seconds, can be
+// changed later with setTimeOffset() ). Additionaly you can specify the
+// update interval (in milliseconds, can be changed using setUpdateInterval() ).
+//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
 
 TFT_eSPI tft = TFT_eSPI();
 
@@ -141,12 +148,24 @@ bool inConfigMode = false;
 bool isWifiAvailable = false;
 bool isMqttAvailable = false;
 
-const char* mqttSetMode    = "/" MQTTDEVICEID "/setmode";
-const char* mqttState      = "/" MQTTDEVICEID "/state";
-const char* mqttTLM        = "/" MQTTDEVICEID "/tlm"; // traffic light mode
-const char* mqttOpmode     = "/" MQTTDEVICEID "/opmode"; // current mode of operation
-const char* mqttBrightness = "/" MQTTDEVICEID "/brightness";
-const char* mqttButton     = "/" MQTTDEVICEID "/button";
+const char* mqttSetMode    = MQTTDEVICEID "/setmode";
+const char* mqttState      = MQTTDEVICEID "/state";
+const char* mqttTLM        = MQTTDEVICEID "/tlm"; // traffic light mode
+const char* mqttOpmode     = MQTTDEVICEID "/opmode"; // current mode of operation
+const char* mqttBrightness = MQTTDEVICEID "/brightness";
+const char* mqttButton     = MQTTDEVICEID "/button";
+const char* mqttClock      = MQTTDEVICEID "/clock";
+
+
+// String TOPIC_STATE   = "%CHIP_ID%/state";
+// ...
+// void setupMqttTopic(const String &id)
+// {
+//   TOPIC_STATE.replace("%CHIP_ID%", id);
+//   TOPIC_INFO.replace("%CHIP_ID%", id);
+//   TOPIC_VERSION.replace("%CHIP_ID%", id);
+// }
+
 
 // ICACHE_RAM_ATTR void enc_button_B_cb()
 // {
@@ -361,12 +380,16 @@ void setup()
   isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(opMode), true);
   
   buttonInit();
+  timeClient.begin();
+  delay(100);
+  timeClient.update();
 }
 
 void loop()
 {
   buttonLoop(); // fixme: in this sample we have long delay on led_test and led start
   unsigned char result = rotary.process();
+
 
   if (isWifiAvailable) ArduinoOTA.handle();
 
@@ -381,6 +404,17 @@ void loop()
       startIndex = startIndex + 1; /* motion speed */
       FillLEDsFromPaletteColors(startIndex);
       FastLED.show();
+     }
+  }
+
+  if (CLOCK == opMode) {
+    if ((millis() - sw_timer_1m) > EVERY_MINUTE) {
+      sw_timer_1m = millis();
+      timeClient.update();
+      int h = timeClient.getHours();
+      int m = timeClient.getMinutes();
+      isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedTime().c_str());
+      drawBinClock(h, m);
      }
   }
 
