@@ -381,15 +381,15 @@ void setup()
   
   buttonInit();
   timeClient.begin();
-  delay(100);
   timeClient.update();
+  delay(100);
 }
 
 void loop()
 {
   buttonLoop(); // fixme: in this sample we have long delay on led_test and led start
   unsigned char result = rotary.process();
-
+  timeClient.update();
 
   if (isWifiAvailable) ArduinoOTA.handle();
 
@@ -410,7 +410,7 @@ void loop()
   if (CLOCK == opMode) {
     if ((millis() - sw_timer_1m) > EVERY_MINUTE) {
       sw_timer_1m = millis();
-      timeClient.update();
+      //timeClient.update();
       int h = timeClient.getHours();
       int m = timeClient.getMinutes();
       isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedTime().c_str());
