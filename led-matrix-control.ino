@@ -345,6 +345,6 @@ void drawBinClock(int hour, int min)
     leds[0] = CRGB::Yellow;
     leds[1] = CRGB::Yellow;
   }
-
+  delay(100);
   FastLED.show();
 }
