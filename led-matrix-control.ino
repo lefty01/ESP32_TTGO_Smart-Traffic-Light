@@ -31,18 +31,19 @@ void fillSolid(struct CRGB * leds, int start, int numToFill, const struct CRGB& 
 //FIXME: const/enum for mode, here red=4, yello=2, green=1
 // refactor/rename to fillTop(int pattern), fillMiddle(int pattern)..
 // use some pattern arg eg. RED, SAD_SMILE, RAINBOW, etc
-//FIXME: maybe do not call the drawTrafficLight function from here ... move to calling f
-void fillTopMatrix(const struct CRGB& color) {
+//FIXME: maybe do not call the drawTrafficLight function from here ...
+//       move to calling function
+void fillTopMatrix(const struct CRGB& color, bool ledShow) {
   fillSolid(leds, 0, 64, color);
-  FastLED.show();
+  if (ledShow) FastLED.show();
 }
-void fillMiddleMatrix(const struct CRGB& color) {
+void fillMiddleMatrix(const struct CRGB& color, bool ledShow) {
   fillSolid(leds, 64, 64, color);
-  FastLED.show();
+  if (ledShow) FastLED.show();
 }
-void fillBottomMatrix(const struct CRGB& color) {
+void fillBottomMatrix(const struct CRGB& color, bool ledShow) {
   fillSolid(leds, 128, 64, color);
-  FastLED.show();
+  if (ledShow) FastLED.show();
 }
   
 void fillTopRed(bool on)
@@ -232,37 +233,61 @@ void startSequence()
     c,d,e,f = hour 2nd digit (c=2^0, d=2^1, e=2^2, f=2^3)
     ... and so on ;)
 
-    here leb numbers are:
-    a: 62,63,54,55
-    b: 60,61,52,53
-    c: 46,38,47,39
-    d: 44,36,45,37
-    e: 42,34,43,35
-    f: 40,32,41,33
-    g: 30,22,31,23
-    h: 28,20,29,21
-    i: 26,18,27,19
-    j: 14,6,15,7
-    k: 12,4,13,5
-    l: 10,2,11,3
-    m: 8,0,9,1
-
+    here led numbers are (first/top matrix):
+    a: H_1_0: 62,63,54,55
+    b: H_1_1: 60,61,52,53
+    c: H_2_0: 46,38,47,39
+    d: H_2_1: 44,36,45,37
+    e: H_2_2: 42,34,43,35
+    f: H_2_3: 40,32,41,33
+    g: M_1_0: 30,22,31,23
+    h: M_1_1: 28,20,29,21
+    i: M_1_2: 26,18,27,19
+    j: M_2_0: 14, 6,15, 7
+    k: M_2_1: 12, 4,13, 5
+    l: M_2_2: 10, 2,11, 3
+    m: M_2_3:  8, 0, 9, 1
 */
-//fixme: maybe this is not the most elegant way ...
-void drawBinClock(int hour, int min)
+
+
+void drawBinClockHour(int h)
 {
-  allLedsOff();
-  fillTopMatrix(CRGB::Blue);
+  int h1 = (int) h / 10; // first  digit 0, 1, or 2
+  int h2 = (int) h % 10; // second digit 0-9
+
+  // changes = h1 ^ prev_h1
+  // if changes_h1 & 1 && h1 & 1 direction blue->yellow H_1_0
+  // if changed_h1 & 2 && h1 & 2 ..
+  // okay for 1st digit of hour does not make sense since
+  // there will always be a bit change ...
+
+  //  changes_h2 ...
+
+
+}
+
+// todo:  could draw seconds on middle matrix and day/month on bottom
+//fixme: maybe this is not the most elegant way ...
+// currently gets called every second if in CLOCK mode
+void drawBinClock(const DateTime &dtNow, const DateTime &dtPrev)
+{
+  int hour    = dtNow.dt_hours;
+  int min     = dtNow.dt_minutes;
+  int prevMin = dtPrev.dt_minutes;
+
+
+  // no update if minutes not changing
+  if (min == prevMin)
+    return;
+
+
+  // TODO:  maybe add some "fade in/out" effect from fastled (which bits changed?)
+  fillTopMatrix(CRGB::Blue, false);
 
   int Hdigit1 = (int) hour / 10;
   int Hdigit2 = (int) hour % 10;
   int Mdigit1 = (int) min  / 10;
   int Mdigit2 = (int) min  % 10;
-
-  // isMqttAvailable = mqttClient.publish(mqttClock, String(Hdigit1).c_str());
-  // isMqttAvailable = mqttClient.publish(mqttClock, String(Hdigit2).c_str());
-  // isMqttAvailable = mqttClient.publish(mqttClock, String(Mdigit1).c_str());
-  // isMqttAvailable = mqttClient.publish(mqttClock, String(Mdigit2).c_str());
 
   if (Hdigit1 & 1) { /* a */
     leds[62] = CRGB::Yellow;

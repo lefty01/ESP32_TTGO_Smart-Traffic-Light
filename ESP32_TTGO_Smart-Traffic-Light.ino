@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.7.0"
+#define VERSION "0.7.3"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -45,6 +45,7 @@ FASTLED_USING_NAMESPACE
 #include <WiFiUdp.h>
 #include <Rotary.h>
 //#include <DateTime.h>
+//#include <time.h>
 
 //#include "NotoSansBold15.h"
 // The font names are arrays references, thus must NOT be in quotes ""
@@ -87,15 +88,17 @@ FASTLED_USING_NAMESPACE
 #define EVERY_MINUTE EVERY_SECOND * 60
 unsigned long sw_timer_10s;
 unsigned long sw_timer_2s;
-unsigned long sw_timer_1m;
 unsigned long sw_timer_4s;
 unsigned long sw_timer_10ms;
+unsigned long sw_timer_clock;
 
 // This is an array of leds.  One item for each led in your strip.
 CRGB leds[NUM_LEDS];
 // fastled palette/blend
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
+
+const long gmtOffset = 7200; // sec
 
 
 /* code above (and hw wiring) assumes three 8x8 rgb matrix panels connected in series
@@ -116,7 +119,7 @@ TBlendType    currentBlending;
 WiFiClientSecure net;
 WiFiUDP ntpUDP;
 PubSubClient mqttClient(net);
-NTPClient timeClient(ntpUDP, 7200);
+NTPClient timeClient(ntpUDP, gmtOffset);
 // You can specify the time server pool and the offset (in seconds, can be
 // changed later with setTimeOffset() ). Additionaly you can specify the
 // update interval (in milliseconds, can be changed using setUpdateInterval() ).
@@ -137,6 +140,12 @@ static volatile opModes opMode = TRAFFIC_AUTO;
 static volatile opModes prevMode;
 static volatile opModes selectMode; // "temp" mode that will be assigned in select menu
 static volatile unsigned int TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
+
+static volatile int prev_hour;
+static volatile int prev_min;
+static volatile int prev_sec;
+struct DateTime cur_dateTime;
+struct DateTime prev_dateTime;
 
 static unsigned long stopwatch;
 
@@ -380,6 +389,7 @@ void setup()
   isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(opMode), true);
   
   buttonInit();
+
   timeClient.begin();
   timeClient.update();
   delay(100);
@@ -408,13 +418,14 @@ void loop()
   }
 
   if (CLOCK == opMode) {
-    if ((millis() - sw_timer_1m) > EVERY_MINUTE) {
-      sw_timer_1m = millis();
-      //timeClient.update();
-      int h = timeClient.getHours();
-      int m = timeClient.getMinutes();
-      isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedTime().c_str());
-      drawBinClock(h, m);
+    if ((millis() - sw_timer_clock) > EVERY_SECOND) {
+      sw_timer_clock = millis();
+      cur_dateTime = timeClient.getDateTime();
+
+      // note: currently every second(!)
+      isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedDateTime("%d.%m. %H:%M:%S").c_str());
+      drawBinClock(cur_dateTime, prev_dateTime);
+      prev_dateTime = cur_dateTime;
      }
   }
 

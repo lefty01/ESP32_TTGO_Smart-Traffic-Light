@@ -42,12 +42,20 @@ arduino sample sketch for ESP32 (here: LILYGO TTGO-T w. color oled) to control t
     |_|_|_|_|_|_|_|_|135
 
 
+# Requirements / Dependencies
+* <FastLED.h>
+* <TFT_eSPI.h>
+* <Button2.h>
+* <PubSubClient.h>
+* <Rotary.h>
+* <NTPClient.h> NOTE: this is required to get day and month  https://github.com/arduino-libraries/NTPClient/pull/94, you can clone from here: https://github.com/lefty01/NTPClient
+
+
 # Features / Ideas
 Initial idea was to have kind of a "busy" or "on-air" signal while working at home, for example show red light while in a web conference.
 Basically its just another toy project to experiment with this ESP32 module and mqtt/tls, ...
 Since the kids needed some traffic light as well it features some automatic mode to cycle through red-red/yellow-green-yellow sequence.
 Other ideas are some kind of mood light or "disco" mode, to light up LEDs at random pattern. Or trigger patterns via mqtt command.
-Clock/Watch mode, add some DS1307 RTC Module.
 OTA is now working and makes use of the LEDs to indicate update progress.
 ## OTA
 Issue: OTA failed: no response from device
