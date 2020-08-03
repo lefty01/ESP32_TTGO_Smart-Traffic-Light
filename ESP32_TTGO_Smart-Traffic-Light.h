@@ -34,7 +34,7 @@ const char* mode2str(opModes mode)
   if (mode == MOOD)           return "LAUNE";
   if (mode == STARTAMPEL)     return "START AMPEL";
   if (mode == DISCO)          return "DISCO";
-  if (mode == CLOCK)          return "UHR";
+  if (mode == CLOCK)          return "UHR (binary)";
   if (mode == APP_CONFIG)     return "CONFIG Menu";
   return "INVALID";
 }
