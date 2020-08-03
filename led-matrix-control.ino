@@ -218,8 +218,9 @@ void startSequence()
 }
 
 // binary 24h-clock on "top" matrix TODO: make position (top,middle,or bottom) an argument
-// yellow "dots" (i.e. here 2x2 squares) on blue background
+// here we have yellow "dots" on blue background
 /* 
+hh:mm (1 bit : 2x2 square)
      _ _ _ _ _ _ _ _
     |_|_|f|f|_|_|m|m|
     |_|_|f|f|_|_|m|m|
@@ -247,39 +248,100 @@ void startSequence()
     k: M_2_1: 12, 4,13, 5
     l: M_2_2: 10, 2,11, 3
     m: M_2_3:  8, 0, 9, 1
+
+
+seconds: (1 bit : 2x4 square)
+     _ _ _ _ _ _ _ _
+    |d|d|d|d|h|h|h|h|
+    |d|d|d|d|h|h|h|h|
+    |c|c|c|c|g|g|g|g|
+    |c|c|c|c|g|g|g|g|
+    |b|b|b|b|f|f|f|f|
+    |b|b|b|b|f|f|f|f|
+    |a|a|a|a|e|e|e|e|
+    |a|a|a|a|e|e|e|e|
+    a-d: seconds 1st digit
+    e-h: seconds 2nd digit
+
+    here led numbers are (first/top matrix):
+    a: S_1_0: 126 118 110 102 127 119 111 103
+    b: S_1_1: 124 116 108 100 125 117 109 101
+    c: S_1_2: 122 114 106  98 123 115 107  99
+    d: S_1_3: 120 112 104  96 121 113 105  97
+    e: S_2_0:  94  86  78  70  95  87  79  71
+    f: S_2_1:  92  84  76  68  93  85  77  69
+    g: S_2_2:  90  82  74  66  91  83  75  67
+    h: S_2_3:  88  80  72  64  89  81  73  65
+
 */
 
+const unsigned H_1_0[4] = { 62, 63, 54, 55 };
+const unsigned H_1_1[4] = { 60, 61, 52, 53 };
+const unsigned H_2_0[4] = { 46, 38, 47, 39 };
+const unsigned H_2_1[4] = { 44, 36, 45, 37 };
+const unsigned H_2_2[4] = { 42, 34, 43, 35 };
+const unsigned H_2_3[4] = { 40, 32, 41, 33 };
+const unsigned M_1_0[4] = { 30, 22, 31, 23 };
+const unsigned M_1_1[4] = { 28, 20, 29, 21 };
+const unsigned M_1_2[4] = { 26, 18, 27, 19 };
+const unsigned M_2_0[4] = { 14,  6, 15,  7 };
+const unsigned M_2_1[4] = { 12,  4, 13,  5 };
+const unsigned M_2_2[4] = { 10,  2, 11,  3 };
+const unsigned M_2_3[4] = {  8,  0,  9,  1 };
+const unsigned S_1_0[8] = { 126, 118, 110, 102, 127, 119, 111, 103 };
+const unsigned S_1_1[8] = { 124, 116, 108, 100, 125, 117, 109, 101 };
+const unsigned S_1_2[8] = { 122, 114, 106,  98, 123, 115, 107,  99 };
+//const unsigned S_1_3[8] = { 120, 112, 104,  96, 121, 113, 105,  97 }; // UNUSED
+const unsigned S_2_0[8] = {  94,  86,  78,  70,  95,  87,  79,  71 };
+const unsigned S_2_1[8] = {  92,  84,  76,  68,  93,  85,  77,  69 };
+const unsigned S_2_2[8] = {  90,  82,  74,  66,  91,  83,  75,  67 };
+const unsigned S_2_3[8] = {  88,  80,  72,  64,  89,  81,  73,  65 };
+// day of month and month
+const unsigned d_1_0[4] = { 190, 182, 191, 183 };
+const unsigned d_1_1[4] = { 188, 180, 189, 181 };
+const unsigned d_2_0[4] = { 174, 166, 175, 167 };
+const unsigned d_2_1[4] = { 172, 164, 173, 165 };
+const unsigned d_2_2[4] = { 170, 162, 171, 163 };
+const unsigned d_2_3[4] = { 168, 160, 169, 161 };
+const unsigned m_1_0[4] = { 158, 150, 159, 151 };
+const unsigned m_2_0[4] = { 142, 134, 143, 135 };
+const unsigned m_2_1[4] = { 140, 132, 141, 133 };
+const unsigned m_2_2[4] = { 138, 130, 139, 131 };
+const unsigned m_2_3[4] = { 136, 128, 137, 129 };
 
-void drawBinClockHour(int h)
-{
-  int h1 = (int) h / 10; // first  digit 0, 1, or 2
-  int h2 = (int) h % 10; // second digit 0-9
-
-  // changes = h1 ^ prev_h1
-  // if changes_h1 & 1 && h1 & 1 direction blue->yellow H_1_0
-  // if changed_h1 & 2 && h1 & 2 ..
-  // okay for 1st digit of hour does not make sense since
-  // there will always be a bit change ...
-
-  //  changes_h2 ...
-
-
+void turnBitOn(const unsigned in[], int num, const struct CRGB& color) {
+  for (unsigned n = 0; n < num; ++n) {
+    leds[in[n]] = color;
+  }
 }
 
-// todo:  could draw seconds on middle matrix and day/month on bottom
-//fixme: maybe this is not the most elegant way ...
+void drawBinClockSec(int sec)
+{
+  int s1 = (int) sec / 10;
+  int s2 = (int) sec % 10;
+
+  fillMiddleMatrix(CRGB::Blue, false);
+
+  if (s1 & 1) turnBitOn(S_1_0, 8, CRGB::Yellow);
+  if (s1 & 2) turnBitOn(S_1_1, 8, CRGB::Yellow);
+  if (s1 & 4) turnBitOn(S_1_2, 8, CRGB::Yellow);
+
+  if (s2 & 1) turnBitOn(S_2_0, 8, CRGB::Yellow);
+  if (s2 & 2) turnBitOn(S_2_1, 8, CRGB::Yellow);
+  if (s2 & 4) turnBitOn(S_2_2, 8, CRGB::Yellow);
+  if (s2 & 8) turnBitOn(S_2_3, 8, CRGB::Yellow);
+
+  FastLED.show();
+  delay(10);
+}
+
+
 // currently gets called every second if in CLOCK mode
-void drawBinClock(const DateTime &dtNow, const DateTime &dtPrev)
+//void drawBinClockHourMin(const DateTime &dtNow, const DateTime &dtPrev)
+void drawBinClockHourMin(const DateTime &dtNow)
 {
   int hour    = dtNow.dt_hours;
   int min     = dtNow.dt_minutes;
-  int prevMin = dtPrev.dt_minutes;
-
-
-  // no update if minutes not changing
-  if (min == prevMin)
-    return;
-
 
   // TODO:  maybe add some "fade in/out" effect from fastled (which bits changed?)
   fillTopMatrix(CRGB::Blue, false);
@@ -289,87 +351,67 @@ void drawBinClock(const DateTime &dtNow, const DateTime &dtPrev)
   int Mdigit1 = (int) min  / 10;
   int Mdigit2 = (int) min  % 10;
 
-  if (Hdigit1 & 1) { /* a */
-    leds[62] = CRGB::Yellow;
-    leds[63] = CRGB::Yellow;
-    leds[54] = CRGB::Yellow;
-    leds[55] = CRGB::Yellow;
-  }
-  if (Hdigit1 & 2) { /* b */
-    leds[60] = CRGB::Yellow;
-    leds[61] = CRGB::Yellow;
-    leds[52] = CRGB::Yellow;
-    leds[53] = CRGB::Yellow;
-  }
+  if (Hdigit1 & 1) turnBitOn(H_1_0, 4, CRGB::Yellow);
+  if (Hdigit1 & 2) turnBitOn(H_1_1, 4, CRGB::Yellow);
 
-  if (Hdigit2 & 1) { /* c */
-    leds[46] = CRGB::Yellow;
-    leds[47] = CRGB::Yellow;
-    leds[38] = CRGB::Yellow;
-    leds[39] = CRGB::Yellow;
-  }
-  if (Hdigit2 & 2) { /* d */
-    leds[44] = CRGB::Yellow;
-    leds[45] = CRGB::Yellow;
-    leds[36] = CRGB::Yellow;
-    leds[37] = CRGB::Yellow;
-  }
-  if (Hdigit2 & 4) { /* e */
-    leds[42] = CRGB::Yellow;
-    leds[43] = CRGB::Yellow;
-    leds[34] = CRGB::Yellow;
-    leds[35] = CRGB::Yellow;
-  }
-  if (Hdigit2 & 8) { /* f */
-    leds[40] = CRGB::Yellow;
-    leds[41] = CRGB::Yellow;
-    leds[32] = CRGB::Yellow;
-    leds[33] = CRGB::Yellow;
-  }
+  if (Hdigit2 & 1) turnBitOn(H_2_0, 4, CRGB::Yellow);
+  if (Hdigit2 & 2) turnBitOn(H_2_1, 4, CRGB::Yellow);
+  if (Hdigit2 & 4) turnBitOn(H_2_2, 4, CRGB::Yellow);
+  if (Hdigit2 & 8) turnBitOn(H_2_3, 4, CRGB::Yellow);
 
-  if (Mdigit1 & 1) { /* g */
-    leds[30] = CRGB::Yellow;
-    leds[31] = CRGB::Yellow;
-    leds[22] = CRGB::Yellow;
-    leds[23] = CRGB::Yellow;
-  }
-  if (Mdigit1 & 2) { /* h */
-    leds[28] = CRGB::Yellow;
-    leds[29] = CRGB::Yellow;
-    leds[20] = CRGB::Yellow;
-    leds[21] = CRGB::Yellow;
-  }
-  if (Mdigit1 & 4) { /* i */
-    leds[26] = CRGB::Yellow;
-    leds[27] = CRGB::Yellow;
-    leds[18] = CRGB::Yellow;
-    leds[19] = CRGB::Yellow;
-  }
+  if (Mdigit1 & 1) turnBitOn(M_1_0, 4, CRGB::Yellow);
+  if (Mdigit1 & 2) turnBitOn(M_1_1, 4, CRGB::Yellow);
+  if (Mdigit1 & 4) turnBitOn(M_1_2, 4, CRGB::Yellow);
+  if (Mdigit2 & 1) turnBitOn(M_2_0, 4, CRGB::Yellow);
+  if (Mdigit2 & 2) turnBitOn(M_2_1, 4, CRGB::Yellow);
+  if (Mdigit2 & 4) turnBitOn(M_2_2, 4, CRGB::Yellow);
+  if (Mdigit2 & 8) turnBitOn(M_2_3, 4, CRGB::Yellow);
 
-  if (Mdigit2 & 1) { /* j */
-    leds[14] = CRGB::Yellow;
-    leds[15] = CRGB::Yellow;
-    leds[6]  = CRGB::Yellow;
-    leds[7]  = CRGB::Yellow;
-  }
-  if (Mdigit2 & 2) { /* k */
-    leds[12] = CRGB::Yellow;
-    leds[13] = CRGB::Yellow;
-    leds[4]  = CRGB::Yellow;
-    leds[5]  = CRGB::Yellow;
-  }
-  if (Mdigit2 & 4) { /* l */
-    leds[10] = CRGB::Yellow;
-    leds[11] = CRGB::Yellow;
-    leds[2]  = CRGB::Yellow;
-    leds[3]  = CRGB::Yellow;
-  }
-  if (Mdigit2 & 8) { /* m */
-    leds[8] = CRGB::Yellow;
-    leds[9] = CRGB::Yellow;
-    leds[0] = CRGB::Yellow;
-    leds[1] = CRGB::Yellow;
-  }
-  delay(100);
   FastLED.show();
+  delay(10);
 }
+
+void drawBinClockDate(int day, int month)
+{
+  int d1 = (int) day / 10;
+  int d2 = (int) day % 10;
+  int m1 = (int) month / 10;
+  int m2 = (int) month % 10;
+
+  fillBottomMatrix(CRGB::Blue, false);
+
+  if (d1 & 1) turnBitOn(d_1_0, 4, CRGB::Yellow);
+  if (d1 & 2) turnBitOn(d_1_1, 4, CRGB::Yellow);
+
+  if (d2 & 1) turnBitOn(d_2_0, 4, CRGB::Yellow);
+  if (d2 & 2) turnBitOn(d_2_1, 4, CRGB::Yellow);
+  if (d2 & 4) turnBitOn(d_2_2, 4, CRGB::Yellow);
+  if (d2 & 8) turnBitOn(d_2_3, 4, CRGB::Yellow);
+
+  if (m1 & 1) turnBitOn(m_1_0, 4, CRGB::Yellow);
+
+  if (m2 & 1) turnBitOn(m_2_0, 4, CRGB::Yellow);
+  if (m2 & 2) turnBitOn(m_2_1, 4, CRGB::Yellow);
+  if (m2 & 4) turnBitOn(m_2_2, 4, CRGB::Yellow);
+  if (m2 & 8) turnBitOn(m_2_3, 4, CRGB::Yellow);
+
+  FastLED.show();
+  delay(10);
+}
+
+
+// void drawBinClockHour(int h)
+// {
+//   int h1 = (int) h / 10; // first  digit 0, 1, or 2
+//   int h2 = (int) h % 10; // second digit 0-9
+
+//   // changes = h1 ^ prev_h1
+//   // if changes_h1 & 1 && h1 & 1 direction blue->yellow H_1_0
+//   // if changed_h1 & 2 && h1 & 2 ..
+//   // okay for 1st digit of hour does not make sense since
+//   // there will always be a bit change ...
+
+//   //  changes_h2 ...
+
+
+// }
