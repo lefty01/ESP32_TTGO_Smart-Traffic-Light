@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.7.3"
+#define VERSION "0.7.6"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -136,7 +136,7 @@ Button2 encBtnP(ENC_BUTTON_PUSH);
 Rotary rotary = Rotary(ENC_BUTTON_A, ENC_BUTTON_B);
 
 
-static volatile opModes opMode = TRAFFIC_AUTO;
+static volatile opModes opMode = TRAFFIC_AUTO; // start mode
 static volatile opModes prevMode;
 static volatile opModes selectMode; // "temp" mode that will be assigned in select menu
 static volatile unsigned int TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
@@ -346,26 +346,6 @@ void setup()
   digitalWrite(DATA_PIN, 0);
 
 
-  // AP mode
-  // WiFi.mode(WIFI_AP);
-  // WiFi.softAP(ssid, password);
-  // //WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  // //server.begin();
-
-  // // web server inline handler ...
-  // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   request->send(200, "text/plain", "Hello, world");
-  // });
-
-  // server.on("/control", HTTP_GET, controlPage);
-
-  // server.on("/", HTTP_POST, handlePost);
-
-  // server.onNotFound(notFound);
-
-  // server.begin();
-  // // --- end server req. handler
-
   tft.setCursor(0, 0);            // Set cursor at top left of screen
   //tft.loadFont(AA_FONT_SMALL);    // Must load the font first
   tft.setTextColor(TFT_CYAN, TFT_BLACK);
@@ -422,9 +402,17 @@ void loop()
       sw_timer_clock = millis();
       cur_dateTime = timeClient.getDateTime();
 
-      // note: currently every second(!)
-      isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedDateTime("%d.%m. %H:%M:%S").c_str());
-      drawBinClock(cur_dateTime, prev_dateTime);
+      drawBinClockSec(cur_dateTime.dt_seconds);
+
+      if (cur_dateTime.dt_minutes != prev_dateTime.dt_minutes) {
+	isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedDateTime("%d.%m. %H:%M:%S").c_str());
+	drawBinClockHourMin(cur_dateTime);
+      }
+
+      if (cur_dateTime.dt_date != prev_dateTime.dt_date) {
+	drawBinClockDate(cur_dateTime.dt_date, cur_dateTime.dt_month);
+      }
+
       prev_dateTime = cur_dateTime;
      }
   }
