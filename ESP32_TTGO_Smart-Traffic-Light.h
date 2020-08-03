@@ -70,6 +70,9 @@ void drawModeSelectMenu();
 void drawConfigMenu(bool update=false);
 
 // led-matrix-control prototypes
+void fillTopMatrix(const struct CRGB& color, bool ledShow=true);
+void fillMiddleMatrix(const struct CRGB& color, bool ledShow=true);
+void fillBottomMatrix(const struct CRGB& color, bool ledShow=true);
 void fillTopRed(bool on=true);
 void fillMiddleYellow(bool on=true);
 void fillBottomGreen(bool on=true);  
