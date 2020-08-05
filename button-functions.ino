@@ -86,6 +86,11 @@ void buttonInit()
 	DEBUG_PRINTLN("exit disco mode");
 	allLedsOff();
       }
+      if (opMode == CLOCK) {
+	// we exit clock mode, reset flag
+	// so we get time again immediately after a mode change
+	showTimeNow = true;
+      }
       toggleRed    = true;
       toggleYellow = true;
       toggleGreen  = true;

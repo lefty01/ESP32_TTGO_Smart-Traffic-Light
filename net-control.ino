@@ -100,7 +100,7 @@ int mqttConnect(bool updateDisplay)
     // topic subscriptions ...
     mqttClient.subscribe(mqttSetMode);
     mqttClient.subscribe(mqttButton);
-    // mqttClient.subscribe();
+    mqttClient.subscribe(mqttSetConfig);
     // mqttClient.subscribe();
   }
   else {
@@ -145,9 +145,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
       opMode = DISCO;
     } else if (0 == memcmp("mood", payload, 4)) {
       opMode = MOOD;
+    } else if (0 == memcmp("clock", payload, 5)) {
+      opMode = CLOCK;
     }
     drawModeText(opMode);
     if (isMqttAvailable) mqttClient.publish(mqttOpmode, mode2str(opMode), true);
+  }
+
+  if (0 == strcmp(mqttSetConfig, topic)) {
+    DEBUG_PRINTLN("set config via mqtt");
+
   }
 
 

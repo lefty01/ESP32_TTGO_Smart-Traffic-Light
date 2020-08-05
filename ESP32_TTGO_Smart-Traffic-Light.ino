@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.7.6"
+#define VERSION "0.7.8"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -79,7 +79,7 @@ FASTLED_USING_NAMESPACE
 #define NUM_LEDS         NUM_OF_MATRIX * NUM_LEDS_MATRIX
 #define CHIPSET          WS2812B
 #define COLOR_ORDER      GRB
-#define BRIGHTNESS       10
+#define BRIGHTNESS        8
 #define MAX_BRIGHTNESS  180 // for now
 #define MIN_BRIGHTNESS    2 // for now
 
@@ -136,7 +136,7 @@ Button2 encBtnP(ENC_BUTTON_PUSH);
 Rotary rotary = Rotary(ENC_BUTTON_A, ENC_BUTTON_B);
 
 
-static volatile opModes opMode = TRAFFIC_AUTO; // start mode
+static volatile opModes opMode = CLOCK; // start mode
 static volatile opModes prevMode;
 static volatile opModes selectMode; // "temp" mode that will be assigned in select menu
 static volatile unsigned int TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
@@ -146,7 +146,7 @@ static volatile int prev_min;
 static volatile int prev_sec;
 struct DateTime cur_dateTime;
 struct DateTime prev_dateTime;
-
+bool showTimeNow = true;
 static unsigned long stopwatch;
 
 static volatile short ledBrightness = BRIGHTNESS;
@@ -158,6 +158,7 @@ bool isWifiAvailable = false;
 bool isMqttAvailable = false;
 
 const char* mqttSetMode    = MQTTDEVICEID "/setmode";
+const char* mqttSetConfig  = MQTTDEVICEID "/setconfig";
 const char* mqttState      = MQTTDEVICEID "/state";
 const char* mqttTLM        = MQTTDEVICEID "/tlm"; // traffic light mode
 const char* mqttOpmode     = MQTTDEVICEID "/opmode"; // current mode of operation
@@ -404,16 +405,17 @@ void loop()
 
       drawBinClockSec(cur_dateTime.dt_seconds);
 
-      if (cur_dateTime.dt_minutes != prev_dateTime.dt_minutes) {
+      if (cur_dateTime.dt_minutes != prev_dateTime.dt_minutes || showTimeNow) {
 	isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedDateTime("%d.%m. %H:%M:%S").c_str());
 	drawBinClockHourMin(cur_dateTime);
       }
 
-      if (cur_dateTime.dt_date != prev_dateTime.dt_date) {
+      if (cur_dateTime.dt_date != prev_dateTime.dt_date || showTimeNow) {
 	drawBinClockDate(cur_dateTime.dt_date, cur_dateTime.dt_month);
       }
 
       prev_dateTime = cur_dateTime;
+      showTimeNow = false;
      }
   }
 

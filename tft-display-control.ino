@@ -64,7 +64,7 @@ void drawConfigMenu(bool update)
   // -> draw "progress bar" as brightness indicator...
   tft.setCursor(0, 40, 2); // posx, posy, font size=4
 
-  if (update) {
+  if (update) { // overwrite brightness value
     tft.setTextColor(TFT_BLACK, TFT_BLACK);
     tft.print("Adjust brightness: ");
     tft.println("000");
@@ -95,7 +95,7 @@ void drawModeSelectMenu()
   // draw prev/next menu item in white and smaller font above and below the current selection
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  // prev mode check if first mode and wrap mode accordingly
+  // prev mode check if first mode (here: traffic_auto) and wrap mode accordingly
   tft.drawString((selectMode == TRAFFIC_AUTO) ?
 		 mode2str(static_cast<opModes>(static_cast<int>(_NUM_MODES_) - 1)) :
 		 mode2str(static_cast<opModes>(static_cast<int>(selectMode) - 1)),

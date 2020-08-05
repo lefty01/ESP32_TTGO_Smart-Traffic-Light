@@ -315,21 +315,22 @@ void turnBitOn(const unsigned in[], int num, const struct CRGB& color) {
   }
 }
 
-void drawBinClockSec(int sec)
+void drawBinClockSec(int sec, const struct CRGB& bgColor,
+		     const struct CRGB& fgColor)
 {
   int s1 = (int) sec / 10;
   int s2 = (int) sec % 10;
 
-  fillMiddleMatrix(CRGB::Blue, false);
+  fillMiddleMatrix(bgColor, false);
 
-  if (s1 & 1) turnBitOn(S_1_0, 8, CRGB::Yellow);
-  if (s1 & 2) turnBitOn(S_1_1, 8, CRGB::Yellow);
-  if (s1 & 4) turnBitOn(S_1_2, 8, CRGB::Yellow);
+  if (s1 & 1) turnBitOn(S_1_0, 8, fgColor);
+  if (s1 & 2) turnBitOn(S_1_1, 8, fgColor);
+  if (s1 & 4) turnBitOn(S_1_2, 8, fgColor);
 
-  if (s2 & 1) turnBitOn(S_2_0, 8, CRGB::Yellow);
-  if (s2 & 2) turnBitOn(S_2_1, 8, CRGB::Yellow);
-  if (s2 & 4) turnBitOn(S_2_2, 8, CRGB::Yellow);
-  if (s2 & 8) turnBitOn(S_2_3, 8, CRGB::Yellow);
+  if (s2 & 1) turnBitOn(S_2_0, 8, fgColor);
+  if (s2 & 2) turnBitOn(S_2_1, 8, fgColor);
+  if (s2 & 4) turnBitOn(S_2_2, 8, fgColor);
+  if (s2 & 8) turnBitOn(S_2_3, 8, fgColor);
 
   FastLED.show();
   delay(10);
@@ -338,62 +339,66 @@ void drawBinClockSec(int sec)
 
 // currently gets called every second if in CLOCK mode
 //void drawBinClockHourMin(const DateTime &dtNow, const DateTime &dtPrev)
-void drawBinClockHourMin(const DateTime &dtNow)
+void drawBinClockHourMin(const DateTime &dtNow,
+			 const struct CRGB& bgColor,
+			 const struct CRGB& fgColor)
 {
   int hour    = dtNow.dt_hours;
   int min     = dtNow.dt_minutes;
 
   // TODO:  maybe add some "fade in/out" effect from fastled (which bits changed?)
-  fillTopMatrix(CRGB::Blue, false);
+  fillTopMatrix(bgColor, false);
 
   int Hdigit1 = (int) hour / 10;
   int Hdigit2 = (int) hour % 10;
   int Mdigit1 = (int) min  / 10;
   int Mdigit2 = (int) min  % 10;
 
-  if (Hdigit1 & 1) turnBitOn(H_1_0, 4, CRGB::Yellow);
-  if (Hdigit1 & 2) turnBitOn(H_1_1, 4, CRGB::Yellow);
+  if (Hdigit1 & 1) turnBitOn(H_1_0, 4, fgColor);
+  if (Hdigit1 & 2) turnBitOn(H_1_1, 4, fgColor);
 
-  if (Hdigit2 & 1) turnBitOn(H_2_0, 4, CRGB::Yellow);
-  if (Hdigit2 & 2) turnBitOn(H_2_1, 4, CRGB::Yellow);
-  if (Hdigit2 & 4) turnBitOn(H_2_2, 4, CRGB::Yellow);
-  if (Hdigit2 & 8) turnBitOn(H_2_3, 4, CRGB::Yellow);
+  if (Hdigit2 & 1) turnBitOn(H_2_0, 4, fgColor);
+  if (Hdigit2 & 2) turnBitOn(H_2_1, 4, fgColor);
+  if (Hdigit2 & 4) turnBitOn(H_2_2, 4, fgColor);
+  if (Hdigit2 & 8) turnBitOn(H_2_3, 4, fgColor);
 
-  if (Mdigit1 & 1) turnBitOn(M_1_0, 4, CRGB::Yellow);
-  if (Mdigit1 & 2) turnBitOn(M_1_1, 4, CRGB::Yellow);
-  if (Mdigit1 & 4) turnBitOn(M_1_2, 4, CRGB::Yellow);
-  if (Mdigit2 & 1) turnBitOn(M_2_0, 4, CRGB::Yellow);
-  if (Mdigit2 & 2) turnBitOn(M_2_1, 4, CRGB::Yellow);
-  if (Mdigit2 & 4) turnBitOn(M_2_2, 4, CRGB::Yellow);
-  if (Mdigit2 & 8) turnBitOn(M_2_3, 4, CRGB::Yellow);
+  if (Mdigit1 & 1) turnBitOn(M_1_0, 4, fgColor);
+  if (Mdigit1 & 2) turnBitOn(M_1_1, 4, fgColor);
+  if (Mdigit1 & 4) turnBitOn(M_1_2, 4, fgColor);
+  if (Mdigit2 & 1) turnBitOn(M_2_0, 4, fgColor);
+  if (Mdigit2 & 2) turnBitOn(M_2_1, 4, fgColor);
+  if (Mdigit2 & 4) turnBitOn(M_2_2, 4, fgColor);
+  if (Mdigit2 & 8) turnBitOn(M_2_3, 4, fgColor);
 
   FastLED.show();
   delay(10);
 }
 
-void drawBinClockDate(int day, int month)
+void drawBinClockDate(int day, int month,
+		      const struct CRGB& bgColor,
+		      const struct CRGB& fgColor)
 {
   int d1 = (int) day / 10;
   int d2 = (int) day % 10;
   int m1 = (int) month / 10;
   int m2 = (int) month % 10;
 
-  fillBottomMatrix(CRGB::Blue, false);
+  fillBottomMatrix(bgColor, false);
 
-  if (d1 & 1) turnBitOn(d_1_0, 4, CRGB::Yellow);
-  if (d1 & 2) turnBitOn(d_1_1, 4, CRGB::Yellow);
+  if (d1 & 1) turnBitOn(d_1_0, 4, fgColor);
+  if (d1 & 2) turnBitOn(d_1_1, 4, fgColor);
 
-  if (d2 & 1) turnBitOn(d_2_0, 4, CRGB::Yellow);
-  if (d2 & 2) turnBitOn(d_2_1, 4, CRGB::Yellow);
-  if (d2 & 4) turnBitOn(d_2_2, 4, CRGB::Yellow);
-  if (d2 & 8) turnBitOn(d_2_3, 4, CRGB::Yellow);
+  if (d2 & 1) turnBitOn(d_2_0, 4, fgColor);
+  if (d2 & 2) turnBitOn(d_2_1, 4, fgColor);
+  if (d2 & 4) turnBitOn(d_2_2, 4, fgColor);
+  if (d2 & 8) turnBitOn(d_2_3, 4, fgColor);
 
-  if (m1 & 1) turnBitOn(m_1_0, 4, CRGB::Yellow);
+  if (m1 & 1) turnBitOn(m_1_0, 4, fgColor);
 
-  if (m2 & 1) turnBitOn(m_2_0, 4, CRGB::Yellow);
-  if (m2 & 2) turnBitOn(m_2_1, 4, CRGB::Yellow);
-  if (m2 & 4) turnBitOn(m_2_2, 4, CRGB::Yellow);
-  if (m2 & 8) turnBitOn(m_2_3, 4, CRGB::Yellow);
+  if (m2 & 1) turnBitOn(m_2_0, 4, fgColor);
+  if (m2 & 2) turnBitOn(m_2_1, 4, fgColor);
+  if (m2 & 4) turnBitOn(m_2_2, 4, fgColor);
+  if (m2 & 8) turnBitOn(m_2_3, 4, fgColor);
 
   FastLED.show();
   delay(10);
