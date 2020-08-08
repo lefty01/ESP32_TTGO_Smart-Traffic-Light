@@ -84,5 +84,4 @@ Fix:   firewall rules
 ![complete](complete.jpg)
 
 
-[![video](https://i9.ytimg.com/vi/QbBckom8IyI/mq1.jpg)](https://youtu.be/QbBckom8IyI "Video")
-
+[![video](https://i9.ytimg.com/vi/QbBckom8IyI/mq1.jpg?sqp=CNyNuvkF&rs=AOn4CLBeDcqo_H5ArI7dzF_1Zan4xrRCyQ)](https://youtu.be/QbBckom8IyI "Video")
