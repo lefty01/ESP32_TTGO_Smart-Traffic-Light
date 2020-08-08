@@ -75,7 +75,7 @@ Fix:   firewall rules
 
 
 
-# Pictures
+# Pictures / Video
 
 ![breadboard](breadboard.jpg)
 ![powersupply](powersupply.jpg)
@@ -84,4 +84,5 @@ Fix:   firewall rules
 ![complete](complete.jpg)
 
 
+[![video](https://i9.ytimg.com/vi/QbBckom8IyI/mq1.jpg)](https://youtu.be/QbBckom8IyI "Video")
 
