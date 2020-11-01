@@ -147,6 +147,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
       opMode = MOOD;
     } else if (0 == memcmp("clock", payload, 5)) {
       opMode = CLOCK;
+      showTimeNow = true;
     }
     drawModeText(opMode);
     if (isMqttAvailable) mqttClient.publish(mqttOpmode, mode2str(opMode), true);

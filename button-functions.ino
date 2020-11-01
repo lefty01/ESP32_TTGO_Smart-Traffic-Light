@@ -125,7 +125,7 @@ void buttonLoop()
 // FIXME: function names
 // FIXME: draw simley on tft in mood mode
 // FIXME: call drawTrafficLight from here instead of within fill functions?!
-void b1()
+void b1() // RED Button
 {
   switch (opMode) {
   case TRAFFIC:  {
@@ -154,7 +154,7 @@ void b1()
 }
 
 
-void b2()
+void b2() // YELLOW Button
 {
   switch (opMode) {
   case TRAFFIC:
@@ -172,7 +172,7 @@ void b2()
 }
 
 
-void b3()
+void b3() // GREEN Button
 {
   switch (opMode) {
   case TRAFFIC: {
