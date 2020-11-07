@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.7.9"
+#define VERSION "0.8.4"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -38,14 +38,12 @@ FASTLED_USING_NAMESPACE
 #include <TFT_eSPI.h>
 #include <Button2.h>
 #include <WiFi.h>
-//#include <ESPAsyncWebServer.h>
 #include <HTTPClient.h>
 #include <PubSubClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Rotary.h>
-//#include <DateTime.h>
-//#include <time.h>
+
 
 //#include "NotoSansBold15.h"
 // The font names are arrays references, thus must NOT be in quotes ""
@@ -99,6 +97,9 @@ CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
 const long gmtOffset = 7200; // sec
+// Central European Time (Frankfurt, Paris)
+TimeChangeRule CEST = {Last, Sun, Mar, 2, 120};     // Central European Summer Time
+TimeChangeRule CET = {Last, Sun, Oct, 3, 60};       // Central European Standard Time
 
 
 /* code above (and hw wiring) assumes three 8x8 rgb matrix panels connected in series
@@ -119,7 +120,8 @@ const long gmtOffset = 7200; // sec
 WiFiClientSecure net;
 WiFiUDP ntpUDP;
 PubSubClient mqttClient(net);
-NTPClient timeClient(ntpUDP, gmtOffset);
+NTPClient timeClient(ntpUDP, gmtOffset, CEST, CET);
+//setTimeZone(CEST, CET);
 // You can specify the time server pool and the offset (in seconds, can be
 // changed later with setTimeOffset() ). Additionaly you can specify the
 // update interval (in milliseconds, can be changed using setUpdateInterval() ).
@@ -239,7 +241,7 @@ void setup()
   //pinMode(ENC_BUTTON_PUSH, INPUT_PULLUP);
   //attachInterrupt(digitalPinToInterrupt(ENC_BUTTON_A), enc_button_A_cb, FALLING);
   //attachInterrupt(digitalPinToInterrupt(ENC_BUTTON_B), enc_button_B_cb, FALLING);
- 
+
   tft.begin();
   tft.setRotation(3);
 
@@ -294,7 +296,7 @@ void setup()
 			    tft.setCursor(30, 50);
 			    tft.println(percent);
 			    tft.println(row);
-			    
+
 			    fillRow(row, CRGB::Blue);
 			  });
     ArduinoOTA.onError([](ota_error_t error) {
@@ -358,7 +360,7 @@ void setup()
   FastLED.setBrightness(BRIGHTNESS);
   currentPalette = PartyColors_p; //RainbowColors_p;
   currentBlending = LINEARBLEND;
-  
+
   ledTest();
 
   tft.setCursor(5, 0);
@@ -368,11 +370,12 @@ void setup()
   drawModeText(opMode);
 
   isMqttAvailable = mqttClient.publish(mqttOpmode, mode2str(opMode), true);
-  
+
   buttonInit();
 
   timeClient.begin();
   timeClient.update();
+
   delay(100);
 }
 

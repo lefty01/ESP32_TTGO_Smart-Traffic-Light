@@ -2,7 +2,7 @@
 #define _ESP32_TTGO_Smart_Traffic_Light_H_
 
 
-#define DEBUG 1
+#define DEBUG 0
 #define DEBUG_MQTT 1
 #include "debug_print.h"
 #include "wifi_mqtt_creds.h"
