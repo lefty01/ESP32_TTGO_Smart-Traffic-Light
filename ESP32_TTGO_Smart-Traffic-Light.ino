@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.8.5"
+#define VERSION "0.8.6"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -96,7 +96,7 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
-const long gmtOffset = 7200; // sec
+const long gmtOffset = 3600; // UTC to CET offset in sec
 // Central European Time (Frankfurt, Paris)
 TimeChangeRule CEST = {Last, Sun, Mar, 2, 120};     // Central European Summer Time
 TimeChangeRule CET = {Last, Sun, Oct, 3, 60};       // Central European Standard Time
