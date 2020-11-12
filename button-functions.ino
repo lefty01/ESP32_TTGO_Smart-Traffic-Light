@@ -19,7 +19,6 @@ void buttonInit()
   });
 
 
-  
   // encoder push-button handler
   encBtnP.setTapHandler([](Button2 & b) {
     unsigned int time = b.wasPressedFor();

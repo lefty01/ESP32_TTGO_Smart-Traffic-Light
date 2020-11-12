@@ -20,7 +20,7 @@ int setupWifi() {
 
   tft.setCursor(20, 60);
   tft.println("Connecting to WiFi");
-  
+
   unsigned retry_counter = 0;
   WiFi.begin(wifi_ssid, wifi_pass);
 
@@ -78,7 +78,7 @@ int mqttConnect(bool updateDisplay)
   if (updateDisplay) {
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
-    tft.setTextFont(2); // 2, 4, 
+    tft.setTextFont(2); // 2, 4,
 
     tft.setCursor(20, 60);
     tft.println("Connecting to MQTT Server");

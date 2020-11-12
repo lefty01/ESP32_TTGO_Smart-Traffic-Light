@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.8.4"
+#define VERSION "0.8.5"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -405,6 +405,8 @@ void loop()
     if ((millis() - sw_timer_clock) > EVERY_SECOND) {
       sw_timer_clock = millis();
       cur_dateTime = timeClient.getDateTime();
+      //      DEBUG_PRINTMQTT("day="); DEBUG_PRINTMQTT(String(cur_dateTime.dt_date).c_str());
+      //      DEBUG_PRINTMQTT("month="); DEBUG_PRINTMQTT(String(cur_dateTime.dt_month).c_str());
 
       drawBinClockSec(cur_dateTime.dt_seconds);
 

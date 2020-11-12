@@ -28,7 +28,7 @@ const char* state2str(int state) {
 #define DEBUG_PRINT_MQTTSTATE(x)
 #endif
 
-const char* mqttDbg = "/" MQTTDEVICEID "/debug";
+const char* mqttDbg = MQTTDEVICEID "/debug";
 
 #define DEBUG_BEGIN(x)        Serial.begin(x)
 #define DEBUG_PRINT(x)        Serial.print(x)
