@@ -33,8 +33,9 @@ void buttonInit()
 	DEBUG_PRINTLN("exit mode select menu");
 	DEBUG_PRINTMQTT("exit mode select menu");
 	opMode = prevMode;
+	if (opMode == CLOCK) showTimeNow = true;
       }
-      else if (opMode == APP_CONFIG) {
+      else if (opMode == APP_CONFIG_SELECT) {
 	DEBUG_PRINTLN("exit config (sub) mode");
 	DEBUG_PRINTMQTT("exit config sub menu");
 	// ... or shall we exit menu directly?
@@ -60,10 +61,10 @@ void buttonInit()
       if (opMode == MODE_SELECT) {
 	if (selectMode == APP_CONFIG) {
 	  prevMode = opMode;
-	  opMode   = APP_CONFIG;
+	  opMode   = static_cast<opModes>(APP_CONFIG_SELECT);
 	  DEBUG_PRINTLN("enter app config menu");
 	  DEBUG_PRINTMQTT("enter app config menu");
-	  drawConfigMenu();
+	  drawConfigSelectMenu();
 	  return;
 	}
 
@@ -71,14 +72,18 @@ void buttonInit()
 	DEBUG_PRINTF("select menu: choosing mode %s\n", mode2str(opMode));
 	DEBUG_PRINTMQTT("select menu, choosing a new opmode");
       }
-      if (opMode == APP_CONFIG) {
-	// in config mode (brightness) and short click...
-	DEBUG_PRINTLN("in app config menu... short click -> exit");
-	DEBUG_PRINTMQTT("in app config menu... short click");
-	opMode = static_cast<opModes>(MODE_SELECT);
-	drawModeSelectMenu();
-	allLedsOff();
-	return;
+      // if we are in config select mode enter one of the configs (brightness, dst, )
+      if (opMode == APP_CONFIG_SELECT) {
+	DEBUG_PRINTLN("in app config selet menu... short click, select config");
+	DEBUG_PRINTMQTT("in app config select menu... short click");
+
+	//opMode = static_cast<opModes>(MODE_SELECT);
+	if (configSelectMode == APP_CONFIG_BRIGHTNESS) {
+	  DEBUG_PRINTLN("brightness config selected");
+	  drawBrightnessConfigMenu(false);
+	  allLedsOff();
+	  return;
+	}
       }
       if (opMode == DISCO) {
 	// we exit disco mode ... clear leds
@@ -93,7 +98,7 @@ void buttonInit()
       toggleRed    = true;
       toggleYellow = true;
       toggleGreen  = true;
-    }
+    } // short push-button
 
     tft.fillScreen(TFT_BLACK);
 

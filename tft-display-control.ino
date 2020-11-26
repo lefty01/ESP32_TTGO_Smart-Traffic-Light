@@ -52,14 +52,14 @@ void drawModeText(opModes mode)
 }
 
 // define config_t or config class to provide as arg (config_t* config)
-void drawConfigMenu(bool update)
+void drawBrightnessConfigMenu(bool update)
 {
   tft.setTextDatum(TC_DATUM);
 
   if (! update) {
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.drawString("APP CONFIG", tft.width() / 2, 0, 4);
+    tft.drawString("Brightness", tft.width() / 2, 0, 4);
   }
   // -> draw "progress bar" as brightness indicator...
   tft.setCursor(0, 40, 2); // posx, posy, font size=4
@@ -75,10 +75,35 @@ void drawConfigMenu(bool update)
   tft.println(ledBrightness);
   if (update)
     return;
+}
 
-  tft.println("config option 2 ...");
-  tft.println("config option 3 ...");
+void drawConfigSelectMenu()
+{
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextDatum(TC_DATUM);
+  tft.drawString("Select Config", tft.width() / 2, 0 /*tft.height() / 2 */, 4);
 
+  tft.setTextDatum(MC_DATUM);
+
+  // middle line, green
+  tft.drawString(config2str(configSelectMode), tft.width() / 2, tft.height() / 2, 4);
+
+  // draw prev/next menu item in white and smaller font above and below the current selection
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+  // prev mode check if first mode (here: traffic_auto) and wrap mode accordingly
+  tft.drawString((configSelectMode == APP_CONFIG_BRIGHTNESS) ?
+		 config2str(static_cast<configModes>(static_cast<int>(_NUM_CONFIG_MODES_) - 1)) :
+		 config2str(static_cast<configModes>(static_cast<int>(configSelectMode) - 1)),
+		 tft.width() / 2, tft.height() / 2 - 22, 2);
+
+  // next mode, modulo number of modes
+  tft.drawString(config2str(static_cast<configModes>((static_cast<int>(configSelectMode) + 1) %
+						     static_cast<int>(_NUM_CONFIG_MODES_))),
+		 tft.width() / 2, tft.height() / 2 + 22, 2);
+
+  drawVersion();
 }
 
 void drawModeSelectMenu()

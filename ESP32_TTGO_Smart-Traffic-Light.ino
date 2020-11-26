@@ -20,7 +20,7 @@
       $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
 
  */
-#define VERSION "0.8.6"
+#define VERSION "0.8.8"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -142,6 +142,10 @@ static volatile opModes opMode = CLOCK; // start mode
 static volatile opModes prevMode;
 static volatile opModes selectMode; // "temp" mode that will be assigned in select menu
 static volatile unsigned int TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
+
+//static volatile configModes configMode = APP_CONFIG_BRIGHTNESS;
+static volatile configModes configSelectMode = APP_CONFIG_BRIGHTNESS;
+
 
 static volatile int prev_hour;
 static volatile int prev_min;
@@ -429,7 +433,7 @@ void loop()
       selectMode = static_cast<opModes>(static_cast<int>(selectMode) + 1);
       selectMode = static_cast<opModes>(static_cast<int>(selectMode) %
 					static_cast<int>(_NUM_MODES_));
-      DEBUG_PRINT("selectMode: ");
+      DEBUG_PRINT("SELECT MODE: ");
       DEBUG_PRINTLN(selectMode);
       drawModeSelectMenu();
     } else if (result == DIR_CCW) {
@@ -444,55 +448,88 @@ void loop()
     }
   }
 
-  if (APP_CONFIG == opMode) {
+  if (APP_CONFIG_SELECT == opMode) {
     TRAFFIC_LIGHT_MODE = TRAFFIC_OFF;
-    // all leds to yellow to adjust brightness ...
-    fillSolid(leds, 0, NUM_LEDS, CRGB::Yellow);
-    FastLED.show();
 
-    // TODO select items from app config menu ...
     if (result == DIR_CW) {
-
-      // if APP_CONFIG_DISCO_MODE
-      // select fast led palette eg. rainbow or somehting ...
-
-      // if APP_CONFIG_DISCO_SPEED
-      // control "speed" (delay) when filling colors from palette ...
-
-      // if APP_CONFIG_BRIGHTNESS ... current default while the only option
-      if (ledBrightness < MAX_BRIGHTNESS)
-	ledBrightness++;
-
-      DEBUG_PRINT("set brightness: ");
-      DEBUG_PRINTLN(ledBrightness);
-      if (isMqttAvailable) {
-        char b[4];
-        sprintf(b, "%d", ledBrightness);
-        isMqttAvailable = mqttClient.publish(mqttBrightness, b);
-      }
-
-      drawConfigMenu(true);
-
-      FastLED.setBrightness(ledBrightness);
-      FastLED.show();
+      configSelectMode = static_cast<configModes>(static_cast<int>(configSelectMode) + 1);
+      configSelectMode = static_cast<configModes>(static_cast<int>(configSelectMode) %
+						  static_cast<int>(_NUM_CONFIG_MODES_));
+      DEBUG_PRINT("configSelectMode: ");
+      DEBUG_PRINTLN(configSelectMode);
+      drawConfigSelectMenu();
     } else if (result == DIR_CCW) {
-      if (ledBrightness > MIN_BRIGHTNESS)
-        ledBrightness--;
+      if (configSelectMode == APP_CONFIG_BRIGHTNESS) // first entry
+	configSelectMode = static_cast<configModes>(static_cast<int>(_NUM_CONFIG_MODES_) - 1);
+      else
+	configSelectMode = static_cast<configModes>(static_cast<int>(configSelectMode) - 1);
 
-      DEBUG_PRINT("set brightness: ");
-      DEBUG_PRINTLN(ledBrightness);
-      if (isMqttAvailable) {
-        char b[4];
-        sprintf(b, "%d", ledBrightness);
-        isMqttAvailable = mqttClient.publish(mqttBrightness, b);
-      }
-
-      drawConfigMenu(true);
-
-      FastLED.setBrightness(ledBrightness);
-      FastLED.show();
+      DEBUG_PRINT("configSelectMode: ");
+      DEBUG_PRINTLN(configSelectMode);
+      drawConfigSelectMenu();
     }
-  } // APP_CONFIG mode
+  } // APP_CONFIG_SELECT mode
+
+  if (APP_CONFIG_SELECT == opMode) {
+
+    // select fast led palette eg. rainbow or somehting ...
+    if (configSelectMode == APP_CONFIG_DISCO_MODE) {
+	DEBUG_PRINT("set disco mode");
+
+    }
+
+    // control "speed" (delay) when filling colors from palette ...
+    if (configSelectMode == APP_CONFIG_DISCO_SPEED) {
+	DEBUG_PRINT("set disco speed");
+    }
+
+
+    if (configSelectMode == APP_CONFIG_DST) {
+	DEBUG_PRINT("set DST");
+    }
+
+    if (configSelectMode == APP_CONFIG_BRIGHTNESS) {
+      // all leds to yellow to adjust brightness ...
+      fillSolid(leds, 0, NUM_LEDS, CRGB::Yellow);
+      FastLED.show();
+
+      // TODO select items from app config menu ...
+      if (result == DIR_CW) {
+	if (ledBrightness < MAX_BRIGHTNESS)
+	  ledBrightness++;
+
+	DEBUG_PRINT("set brightness: ");
+	DEBUG_PRINTLN(ledBrightness);
+	if (isMqttAvailable) {
+	  char b[4];
+	  sprintf(b, "%d", ledBrightness);
+	  isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+	}
+
+	drawBrightnessConfigMenu(true);
+
+	FastLED.setBrightness(ledBrightness);
+	FastLED.show();
+      } else if (result == DIR_CCW) {
+	if (ledBrightness > MIN_BRIGHTNESS)
+	  ledBrightness--;
+
+	DEBUG_PRINT("set brightness: ");
+	DEBUG_PRINTLN(ledBrightness);
+	if (isMqttAvailable) {
+	  char b[4];
+	  sprintf(b, "%d", ledBrightness);
+	  isMqttAvailable = mqttClient.publish(mqttBrightness, b);
+	}
+
+	drawBrightnessConfigMenu(true);
+
+	FastLED.setBrightness(ledBrightness);
+	FastLED.show();
+      }
+    } // APP_CONFIG_BRIGHTNESS
+  } // APP_CONFIG
+
 
   // cycle through "regular" traffic light sequence
   if (TRAFFIC_AUTO == opMode) {

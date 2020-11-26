@@ -2,7 +2,7 @@
 #define _ESP32_TTGO_Smart_Traffic_Light_H_
 
 
-#define DEBUG 0
+#define DEBUG 1
 #define DEBUG_MQTT 1
 #include "debug_print.h"
 #include "wifi_mqtt_creds.h"
@@ -17,12 +17,23 @@ enum opModes: byte
     ,STARTAMPEL     // f1-like start signel, button1: start, button2: stop -> show time
     ,DISCO
     ,CLOCK
-    ,APP_CONFIG
+    ,APP_CONFIG     // enter app config select mode
     ,_NUM_MODES_
 };
+
+enum configModes: byte
+{
+  APP_CONFIG_BRIGHTNESS = 0  // cycle through trafficLightModes at fixed intervalls
+    ,APP_CONFIG_DST
+    ,APP_CONFIG_DISCO_MODE
+    ,APP_CONFIG_DISCO_SPEED
+    ,_NUM_CONFIG_MODES_
+};
+
 // special modes
 const byte MODE_SELECT = 0x10;
-//const byte APP_CONFIG  = 0x20;
+const byte APP_CONFIG_SELECT  = 0x20;
+
 
 
 // german menu ;)
@@ -36,6 +47,19 @@ const char* mode2str(opModes mode)
   if (mode == DISCO)          return "DISCO";
   if (mode == CLOCK)          return "UHR (binary)";
   if (mode == APP_CONFIG)     return "CONFIG Menu";
+  return "INVALID";
+}
+
+const char* config2str(configModes mode)
+{
+  if (mode == APP_CONFIG_BRIGHTNESS)
+    return "Helligkeit";
+  if (mode == APP_CONFIG_DST)
+    return "Sommerzeit (DST)";
+  if (mode == APP_CONFIG_DISCO_SPEED)
+    return "Disco Speed";
+  if (mode == APP_CONFIG_DISCO_MODE)
+    return "Disco Modus";
   return "INVALID";
 }
 
