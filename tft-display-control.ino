@@ -20,6 +20,39 @@ void drawTime(unsigned long time)
   tft.print((double)time/1000);
 }
 
+void drawClock(const DateTime &dtNow)
+{
+  uint8_t hour = dtNow.dt_hours;
+  uint8_t min  = dtNow.dt_minutes;
+  // uint16_t x0=0, x1=0, yy0=0, yy1=0;
+  // float sx = 0, sy = 1;
+
+  // position
+  uint8_t clockX = 120;
+  uint8_t clockY =  80;
+  uint8_t clockRadius = 20; // clock radius
+  uint8_t tick = 3;
+  tft.drawCircle(clockX, clockY, clockRadius, TFT_WHITE);
+  tft.fillCircle(clockX, clockY,  1, TFT_WHITE);
+
+  // 4 hour marks (lines)
+  tft.drawLine(clockX, clockY - clockRadius + tick, clockX, clockY - clockRadius, TFT_WHITE); // 12h pos
+  tft.drawLine(clockX, clockY + clockRadius - tick, clockX, clockY + clockRadius, TFT_WHITE); //  6h pos
+  tft.drawLine(clockX - clockRadius + tick, clockY, clockX - clockRadius, clockY, TFT_WHITE); // 9h pos
+  tft.drawLine(clockX + clockRadius - tick, clockY, clockX + clockRadius, clockY, TFT_WHITE); // 3h pos
+
+
+  float mdeg = min  * 6;
+  float hdeg = hour * 30 + mdeg * 0.0833333;  // 0-11 -> 0-360 - includes minutes and seconds
+  // hx = cos((hdeg-90)*0.0174532925);
+  // hy = sin((hdeg-90)*0.0174532925);
+  // mx = cos((mdeg-90)*0.0174532925);
+  // my = sin((mdeg-90)*0.0174532925);
+  // sx = cos((sdeg-90)*0.0174532925);
+  // sy = sin((sdeg-90)*0.0174532925);
+
+}
+
 void drawVersion()
 {
   tft.setTextColor(TFT_WHITE);
@@ -48,6 +81,10 @@ void drawModeText(opModes mode)
   // if (mode == MOOD)           tft.println("LAUNE");
   // if (mode == PATTERN)        tft.println("MUSTER");
   // if (mode == PARTY)          tft.println("PARTY");
+  if (mode == CLOCK) {
+    drawClock(cur_dateTime);
+  }
+
   drawVersion();
 }
 
@@ -160,7 +197,7 @@ void drawTrafficLight(int mode, bool clear)
   //   tft.fillRect(10, 18, 2*radius + 2*d, 100+2, TFT_BLACK);
   // }
   // 30 30 30 -> r=15 90px | o o o | 10/4=2.5 -> d=2
-  
+
   tft.drawRect(10, 18, 2*radius + 2*d, 100+2, TFT_WHITE);
 
   x1 = 10 + d + radius;

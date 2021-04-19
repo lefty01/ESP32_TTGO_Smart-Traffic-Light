@@ -16,11 +16,13 @@
 
    OTA failed: no response from device
    -> firewall:
-      $ sudo iptables -I INPUT  -s 192.168.1.56 -j ACCEPT
-      $ sudo iptables -I OUTPUT -d 192.168.1.56 -j ACCEPT
+      $ sudo iptables -I INPUT  -s 192.168.1.74 -j ACCEPT
+      $ sudo iptables -I OUTPUT -d 192.168.1.74 -j ACCEPT
+      or
+      $ firewall-cmd --zone=trusted --add-source=192.168.1.74
 
  */
-#define VERSION "0.8.8"
+#define VERSION "0.8.12"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -96,7 +98,8 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
-const long gmtOffset = 3600; // UTC to CET offset in sec
+//const long gmtOffset = 3600; // UTC to CET offset in sec Winterzeit
+const long gmtOffset = 7200; // UTC to CET offset in sec Sommerzeit
 // Central European Time (Frankfurt, Paris)
 TimeChangeRule CEST = {Last, Sun, Mar, 2, 120};     // Central European Summer Time
 TimeChangeRule CET = {Last, Sun, Oct, 3, 60};       // Central European Standard Time
@@ -406,6 +409,10 @@ void loop()
   }
 
   if (CLOCK == opMode) {
+    // drawSmiley(SAD, MATRIX_POS_TOP);
+    // drawSmiley(SAD, MATRIX_POS_MIDDLE);
+    // drawSmiley(SAD, MATRIX_POS_BOTTOM);
+    // return;
     if ((millis() - sw_timer_clock) > EVERY_SECOND) {
       sw_timer_clock = millis();
       cur_dateTime = timeClient.getDateTime();

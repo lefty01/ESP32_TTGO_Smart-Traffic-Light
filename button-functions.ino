@@ -5,16 +5,19 @@ void buttonInit()
 
   btn1.setPressedHandler([](Button2 & b) {
     DEBUG_PRINTLN("Button 1 SHORT click...");
+    DEBUG_PRINTMQTT("Button 1 (red) pressed");
     b1();
   });
 
   btn2.setPressedHandler([](Button2 & b) {
     DEBUG_PRINTLN("Button 2 SHORT click...");
+    DEBUG_PRINTMQTT("Button 2 (yello) pressed");
     b2();
   });
 
   btn3.setPressedHandler([](Button2 & b) {
     DEBUG_PRINTLN("Button 3 SHORT click...");
+    DEBUG_PRINTMQTT("Button 3 (green) pressed");
     b3();
   });
 

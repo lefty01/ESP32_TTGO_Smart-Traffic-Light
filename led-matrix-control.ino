@@ -17,7 +17,7 @@ void fillRow(unsigned row, const struct CRGB& color)
     else
       leds[row0[n] - row] = color;
   }
-  
+
   FastLED.show();
 }
 
@@ -45,7 +45,7 @@ void fillBottomMatrix(const struct CRGB& color, bool ledShow) {
   fillSolid(leds, 128, 64, color);
   if (ledShow) FastLED.show();
 }
-  
+
 void fillTopRed(bool on)
 {
   fillTopMatrix(on ? CRGB::Red : CRGB::Black);
@@ -63,6 +63,9 @@ void fillBottomGreen(bool on)
 }
 void allLedsOff()
 {
+  toggleRed    = true;
+  toggleYellow = true;
+  toggleGreen  = true;
   fillSolid(leds, 0, NUM_LEDS, CRGB::Black);
   FastLED.show();
   //FastLED.clear();
@@ -119,7 +122,7 @@ void drawSmiley(int mood, int pos)
   // sanity check mood/pos
   if ((pos > 7)  || (pos <= 0)) return;
   //if ((mood > 3) || (mood < 0)) return;
-  
+
   if (NO_MOOD == mood) {
     if (pos & MATRIX_POS_TOP) {
       fillTopRed(false);
@@ -133,7 +136,7 @@ void drawSmiley(int mood, int pos)
     FastLED.show();
     return;
   }
-  
+
   // fixme: rotate ... ccw - 90deg left
   unsigned smiley[24] = {2,3,4,5,        // col 8
                          9,14,           // col 7
@@ -207,7 +210,7 @@ void startSequence()
   // }
   // FastLED.show();
   fillBottomMatrix(CRGB::Red);
-  
+
   // wert zwischen 500ms und 1500ms
   delay(random(500, 2000));
   fillSolid(leds, 0, NUM_LEDS, CRGB::Green);

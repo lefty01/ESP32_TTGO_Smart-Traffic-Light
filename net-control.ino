@@ -163,6 +163,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
 
   if (0 == strcmp(mqttButton, topic)) {
     DEBUG_PRINTLN("button press via mqtt");
+    DEBUG_PRINTMQTT("button press via mqtt");
 
     if (0 == memcmp("1", payload, 1)) {
       b1();
