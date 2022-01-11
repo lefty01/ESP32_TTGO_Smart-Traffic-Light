@@ -9,7 +9,7 @@ void fillRow(unsigned row, const struct CRGB& color)
 
   // row 1: row8[0] - 1 -> - row index
   // row X values are row0[n]-X
-  for (unsigned n; n<ROWS_OF_MATRIX; ++n) {
+  for (unsigned n=0; n<ROWS_OF_MATRIX; ++n) {
     if (row > 15) // 2*ROWS_OF_MATRIX-1
       leds[row16[n] - (row-16)] = color;
     else if (row > 7) // 1*ROWS_OF_MATRIX-1
@@ -28,7 +28,7 @@ void fillSolid(struct CRGB * leds, int start, int numToFill, const struct CRGB& 
     leds[i] = color;
   }
 }
-//FIXME: const/enum for mode, here red=4, yello=2, green=1
+//FIXME: const/enum for mode, here red=4, yellow=2, green=1
 // refactor/rename to fillTop(int pattern), fillMiddle(int pattern)..
 // use some pattern arg eg. RED, SAD_SMILE, RAINBOW, etc
 //FIXME: maybe do not call the drawTrafficLight function from here ...
@@ -223,7 +223,7 @@ void startSequence()
 // binary 24h-clock on "top" matrix TODO: make position (top,middle,or bottom) an argument
 // here we have yellow "dots" on blue background
 /* 
-hh:mm (1 bit : 2x2 square)
+hh:mm (1 bit : 2x2 square) -> TOP Matrix
      _ _ _ _ _ _ _ _
     |_|_|f|f|_|_|m|m|
     |_|_|f|f|_|_|m|m|
@@ -233,8 +233,8 @@ hh:mm (1 bit : 2x2 square)
     |b|b|d|d|h|h|k|k|
     |a|a|c|c|g|g|j|j|
     |a|a|c|c|g|g|j|j|
-    a,b     = hour 1st digit (a=2^0, b=2^1)
-    c,d,e,f = hour 2nd digit (c=2^0, d=2^1, e=2^2, f=2^3)
+    a,b     = hour 1st digit (a=2^0, b=2^1) (either 0/off, 1, or 2)
+    c,d,e,f = hour 2nd digit (c=2^0, d=2^1, e=2^2, f=2^3)  (00..59)
     ... and so on ;)
 
     here led numbers are (first/top matrix):
@@ -253,7 +253,7 @@ hh:mm (1 bit : 2x2 square)
     m: M_2_3:  8, 0, 9, 1
 
 
-seconds: (1 bit : 2x4 square)
+seconds: (1 bit : 2x4 square) -> Middle Matrix
      _ _ _ _ _ _ _ _
     |d|d|d|d|h|h|h|h|
     |d|d|d|d|h|h|h|h|
@@ -276,8 +276,11 @@ seconds: (1 bit : 2x4 square)
     g: S_2_2:  90  82  74  66  91  83  75  67
     h: S_2_3:  88  80  72  64  89  81  73  65
 
-*/
+date: dd:mm (date:month) -> Bottom Matrix
+ ...
 
+*/
+// hours & minutes
 const unsigned H_1_0[4] = { 62, 63, 54, 55 };
 const unsigned H_1_1[4] = { 60, 61, 52, 53 };
 const unsigned H_2_0[4] = { 46, 38, 47, 39 };
@@ -291,6 +294,7 @@ const unsigned M_2_0[4] = { 14,  6, 15,  7 };
 const unsigned M_2_1[4] = { 12,  4, 13,  5 };
 const unsigned M_2_2[4] = { 10,  2, 11,  3 };
 const unsigned M_2_3[4] = {  8,  0,  9,  1 };
+// seconds
 const unsigned S_1_0[8] = { 126, 118, 110, 102, 127, 119, 111, 103 };
 const unsigned S_1_1[8] = { 124, 116, 108, 100, 125, 117, 109, 101 };
 const unsigned S_1_2[8] = { 122, 114, 106,  98, 123, 115, 107,  99 };

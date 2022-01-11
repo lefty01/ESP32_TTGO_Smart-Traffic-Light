@@ -7,6 +7,15 @@
 #include "debug_print.h"
 #include "wifi_mqtt_creds.h"
 
+struct DateTime {
+  int dt_seconds;
+  int dt_minutes;
+  int dt_hours;
+  int dt_date;
+  int dt_month;
+  int dt_year;
+};
+
 // "cycle through" modes FIXME:  make proper state-machine implementation...
 enum opModes: byte
 {
@@ -16,6 +25,7 @@ enum opModes: byte
     ,MOOD           // toggle simileys via buttons 1-2
     ,STARTAMPEL     // f1-like start signel, button1: start, button2: stop -> show time
     ,DISCO
+    ,RAIN
     ,CLOCK
     ,APP_CONFIG     // enter app config select mode
     ,_NUM_MODES_
@@ -26,7 +36,9 @@ enum configModes: byte
   APP_CONFIG_BRIGHTNESS = 0  // cycle through trafficLightModes at fixed intervalls
     ,APP_CONFIG_DST
     ,APP_CONFIG_DISCO_MODE
+    ,APP_CONFIG_RAIN_MODE
     ,APP_CONFIG_DISCO_SPEED
+    ,APP_CONFIG_RAIN_SPEED
     ,_NUM_CONFIG_MODES_
 };
 
@@ -45,6 +57,7 @@ const char* mode2str(opModes mode)
   if (mode == MOOD)           return "LAUNE";
   if (mode == STARTAMPEL)     return "START AMPEL";
   if (mode == DISCO)          return "DISCO";
+  if (mode == RAIN)           return "RAIN";
   if (mode == CLOCK)          return "UHR (binary)";
   if (mode == APP_CONFIG)     return "CONFIG Menu";
   return "INVALID";
@@ -58,8 +71,12 @@ const char* config2str(configModes mode)
     return "Sommerzeit (DST)";
   if (mode == APP_CONFIG_DISCO_SPEED)
     return "Disco Speed";
+  if (mode == APP_CONFIG_RAIN_SPEED)
+    return "Rain Speed";
   if (mode == APP_CONFIG_DISCO_MODE)
     return "Disco Modus";
+  if (mode == APP_CONFIG_RAIN_MODE)
+    return "Rain Modus";
   return "INVALID";
 }
 
@@ -77,7 +94,7 @@ enum trafficLightModes: byte
 
 enum moodType: byte
 {
-  HAPPY
+     HAPPY
     ,NEUTRAL
     ,SAD
     ,NO_MOOD

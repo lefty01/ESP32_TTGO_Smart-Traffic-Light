@@ -11,7 +11,7 @@ void buttonInit()
 
   btn2.setPressedHandler([](Button2 & b) {
     DEBUG_PRINTLN("Button 2 SHORT click...");
-    DEBUG_PRINTMQTT("Button 2 (yello) pressed");
+    DEBUG_PRINTMQTT("Button 2 (yellow) pressed");
     b2();
   });
 
@@ -88,8 +88,8 @@ void buttonInit()
 	  return;
 	}
       }
-      if (opMode == DISCO) {
-	// we exit disco mode ... clear leds
+      if (opMode == DISCO || opMode == RAIN) {
+	// we exit disco, rain, ... mode ... clear leds
 	DEBUG_PRINTLN("exit disco mode");
 	allLedsOff();
       }
@@ -136,6 +136,8 @@ void b1() // RED Button
 {
   switch (opMode) {
   case TRAFFIC:  {
+    DEBUG_PRINTMQTT("b1: switch opmode=TRAFFIC, toggleRed=");
+    DEBUG_PRINTMQTT(toggleRed ? "true" : "false");
     fillTopRed(toggleRed);
     break;
   }
@@ -153,6 +155,7 @@ void b1() // RED Button
     break;
   case TRAFFIC_AUTO:
   case DISCO:
+  case RAIN:
   case APP_CONFIG:
   default:
     break;

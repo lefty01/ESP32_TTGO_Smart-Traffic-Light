@@ -122,15 +122,12 @@ int mqttConnect(bool updateDisplay)
 
 void mqttCallback(char* topic, byte* payload, unsigned int length)
 {
-  DEBUG_PRINT("Message arrived [");
-  DEBUG_PRINT(topic);
-  DEBUG_PRINT("] ");
-
   char value[length+1];
   memcpy(value, payload, length);
   value[length] = '\0';
 
-  DEBUG_PRINTLN(value);
+  DEBUG_PRINTF("Message arrived: [%s (len=%d)] %s (len=%d)\n",
+	       topic, strlen(topic), value, length);
 
   if (0 == strcmp(mqttSetMode, topic)) {
     DEBUG_PRINTLN("setting operating mode via mqtt");
@@ -145,6 +142,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
       allLedsOff();
     } else if (0 == memcmp("disco", payload, 5)) {
       opMode = DISCO;
+    } else if (0 == memcmp("rain", payload, 4)) {
+      opMode = RAIN;
     } else if (0 == memcmp("mood", payload, 4)) {
       opMode = MOOD;
     } else if (0 == memcmp("clock", payload, 5)) {
@@ -163,13 +162,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
 
   if (0 == strcmp(mqttButton, topic)) {
     DEBUG_PRINTLN("button press via mqtt");
-    DEBUG_PRINTMQTT("button press via mqtt");
 
-    if (0 == memcmp("1", payload, 1)) {
+    if (0 == memcmp("1", value, 1)) {
       b1();
-    } else if (0 == memcmp("2", payload, 1)) {
+    } else if (0 == memcmp("2", value, 1)) {
       b2();
-    } else if (0 == memcmp("3", payload, 1)) {
+    } else if (0 == memcmp("3", value, 1)) {
       b3();
     }
   }

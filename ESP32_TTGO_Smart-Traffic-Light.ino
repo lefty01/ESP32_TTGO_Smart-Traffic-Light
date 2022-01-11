@@ -22,7 +22,7 @@
       $ firewall-cmd --zone=trusted --add-source=192.168.1.74
 
  */
-#define VERSION "0.8.12"
+#define VERSION "0.9.2"
 #define MQTTDEVICEID "ESP_AMPEL"
 #define OTA_HOSTNAME "smart_ampel1"
 
@@ -42,8 +42,7 @@ FASTLED_USING_NAMESPACE
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <PubSubClient.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <time.h>
 #include <Rotary.h>
 
 
@@ -98,13 +97,6 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
-//const long gmtOffset = 3600; // UTC to CET offset in sec Winterzeit
-const long gmtOffset = 7200; // UTC to CET offset in sec Sommerzeit
-// Central European Time (Frankfurt, Paris)
-TimeChangeRule CEST = {Last, Sun, Mar, 2, 120};     // Central European Summer Time
-TimeChangeRule CET = {Last, Sun, Oct, 3, 60};       // Central European Standard Time
-
-
 /* code above (and hw wiring) assumes three 8x8 rgb matrix panels connected in series
  * which can then be addressed from 0..191
  * another alternative, maybe easier if we mainly control those three as single elements
@@ -119,17 +111,13 @@ TimeChangeRule CET = {Last, Sun, Oct, 3, 60};       // Central European Standard
  *
  */
 
+// configure NTP
+// https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+#define MY_NTP_SERVER "de.pool.ntp.org"
+#define MY_TZ         "CET-1CEST,M3.5.0,M10.5.0/3"
 
 WiFiClientSecure net;
-WiFiUDP ntpUDP;
 PubSubClient mqttClient(net);
-NTPClient timeClient(ntpUDP, gmtOffset, CEST, CET);
-//setTimeZone(CEST, CET);
-// You can specify the time server pool and the offset (in seconds, can be
-// changed later with setTimeOffset() ). Additionaly you can specify the
-// update interval (in milliseconds, can be changed using setUpdateInterval() ).
-//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
-
 TFT_eSPI tft = TFT_eSPI();
 
 // defaults to INPUT_PULLUP, debounce time 50ms
@@ -191,6 +179,34 @@ const char* mqttClock      = MQTTDEVICEID "/clock";
 // }
 
 
+time_t now;  // this is the epoch
+tm tm;       // the structure tm holds time information in a more convient way
+
+DateTime getDateTime()
+{
+  time(&now);                       // read the current time
+  localtime_r(&now, &tm);           // update the structure tm with the current time
+  DateTime dt = {
+		 tm.tm_sec,
+		 tm.tm_min,
+		 tm.tm_hour,
+		 tm.tm_mday,
+		 (tm.tm_mon + 1),
+		 (tm.tm_year + 1900)
+  };
+  return dt;
+}
+
+String getFormattedDateTime()
+{
+  time(&now);                       // read the current time
+  localtime_r(&now, &tm);           // update the structure tm with the current time
+
+  char buf[24];
+  snprintf(buf, 24, "%02d.%02d %02d:%02d:%02d", tm.tm_mday, (tm.tm_mon + 1), tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+  return String(buf);
+}
 
 
 void handleTrafficLight()
@@ -229,6 +245,7 @@ void handleTrafficLight()
   }
 }
 
+// how to choose effect and palette !?
 void FillLEDsFromPaletteColors(uint8_t colorIndex)
 {
   for (int i = 0; i < NUM_LEDS; ++i) {
@@ -288,6 +305,8 @@ void setup()
 		       });
     ArduinoOTA.onEnd([]() {
 		       DEBUG_PRINTLN("\nEnd");
+		       fillMiddleMatrix(CRGB::Black);
+		       drawSmiley(HAPPY, MATRIX_POS_MIDDLE);
 		     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 			    unsigned int percent = progress / (total / 100);
@@ -330,6 +349,7 @@ void setup()
 			   DEBUG_PRINTLN("End Failed");
 			   tft.println("***  END failed !!!");
 			 }
+			 drawSmiley(SAD, MATRIX_POS_MIDDLE);
 			 delay(5000);
 		       });
     ArduinoOTA.begin();
@@ -380,8 +400,10 @@ void setup()
 
   buttonInit();
 
-  timeClient.begin();
-  timeClient.update();
+  //configTime(MY_TZ, MY_NTP_SERVER); -> ESP8266
+  configTime(0, 0, MY_NTP_SERVER); // 0, 0 because we will use TZ in the next line
+  setenv("TZ", MY_TZ, 1);          // Set environment variable with your time zone
+  tzset();
 
   delay(100);
 }
@@ -390,7 +412,6 @@ void loop()
 {
   buttonLoop(); // fixme: in this sample we have long delay on led_test and led start
   unsigned char result = rotary.process();
-  timeClient.update();
 
   if (isWifiAvailable) ArduinoOTA.handle();
 
@@ -408,6 +429,15 @@ void loop()
      }
   }
 
+  if (RAIN == opMode) { // todo
+    if ((millis() - sw_timer_10ms) > 500) {
+      static uint8_t startIndex = 0;
+      startIndex = startIndex + 1; /* motion speed */
+      FillLEDsFromPaletteColors(startIndex);
+      FastLED.show();
+     }
+  }
+
   if (CLOCK == opMode) {
     // drawSmiley(SAD, MATRIX_POS_TOP);
     // drawSmiley(SAD, MATRIX_POS_MIDDLE);
@@ -415,14 +445,12 @@ void loop()
     // return;
     if ((millis() - sw_timer_clock) > EVERY_SECOND) {
       sw_timer_clock = millis();
-      cur_dateTime = timeClient.getDateTime();
-      //      DEBUG_PRINTMQTT("day="); DEBUG_PRINTMQTT(String(cur_dateTime.dt_date).c_str());
-      //      DEBUG_PRINTMQTT("month="); DEBUG_PRINTMQTT(String(cur_dateTime.dt_month).c_str());
+      cur_dateTime = getDateTime();
 
       drawBinClockSec(cur_dateTime.dt_seconds);
 
       if (cur_dateTime.dt_minutes != prev_dateTime.dt_minutes || showTimeNow) {
-	isMqttAvailable = mqttClient.publish(mqttClock, timeClient.getFormattedDateTime("%d.%m. %H:%M:%S").c_str());
+	isMqttAvailable = mqttClient.publish(mqttClock, getFormattedDateTime().c_str());
 	drawBinClockHourMin(cur_dateTime);
       }
 
